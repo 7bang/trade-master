@@ -16,6 +16,7 @@ class ProductListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('품목 관리'),
+        automaticallyImplyLeading: false,
       ),
       body: productsAsync.when(
         data: (products) {

@@ -9,12 +9,15 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
+        seedColor: Colors.teal,
         brightness: Brightness.light,
       ),
-      appBarTheme: const AppBarTheme(
+      scaffoldBackgroundColor: Colors.grey[50], // 매우 밝은 회색 배경
+      appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.teal[800],
       ),
       cardTheme: CardThemeData(
         elevation: 2,

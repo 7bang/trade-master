@@ -207,16 +207,23 @@ class SupabaseService {
 
   /// 거래 목록 조회
   Future<List<Transaction>> getTransactions({
-    required String customerId,
+    String? customerId,
+    String? businessId,
     DateTime? startDate,
     DateTime? endDate,
   }) async {
     // TODO: 날짜 필터링 기능은 추후 구현
-    final response = await _client
+    var query = _client
         .from('transactions')
-        .select('*, customer:customers(*), product:products(*)')
-        .eq('customer_id', customerId)
-        .order('date', ascending: false);
+        .select('*, customer:customers(*), product:products(*)');
+
+    if (customerId != null) {
+      query = query.eq('customer_id', customerId);
+    } else if (businessId != null) {
+      query = query.eq('business_id', businessId);
+    }
+
+    final response = await query.order('date', ascending: false);
 
     return (response as List)
         .map((json) => Transaction.fromJson(json as Map<String, dynamic>))

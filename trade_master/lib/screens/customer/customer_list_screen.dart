@@ -15,43 +15,16 @@ class CustomerListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('거래의장인'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.inventory_2),
-            tooltip: '품목 관리',
+            icon: const Icon(Icons.search),
+            tooltip: '검색',
             onPressed: () {
-              context.go('/products');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: '로그아웃',
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('로그아웃'),
-                  content: const Text('로그아웃 하시겠습니까?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('취소'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('로그아웃'),
-                    ),
-                  ],
-                ),
+              // TODO: 거래처 검색 기능 구현
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('검색 기능 준비중')),
               );
-
-              if (confirmed == true && context.mounted) {
-                final service = ref.read(supabaseServiceProvider);
-                await service.signOut();
-                if (context.mounted) {
-                  context.go('/');
-                }
-              }
             },
           ),
         ],
@@ -79,7 +52,7 @@ class CustomerListScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
-                      context.go('/customers/new');
+                      context.push('/customers/new');
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('거래처 추가하기'),
@@ -247,7 +220,7 @@ class CustomerListScreen extends ConsumerWidget {
                           ],
                         ),
                         onTap: () {
-                          context.go('/customers/${customer.id}');
+                          context.push('/customers/${customer.id}');
                         },
                       ),
                     );
@@ -290,7 +263,7 @@ class CustomerListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          context.go('/customers/new');
+          context.push('/customers/new');
         },
         icon: const Icon(Icons.add),
         label: const Text('거래처 추가'),
