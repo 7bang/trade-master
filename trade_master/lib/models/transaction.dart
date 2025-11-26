@@ -23,20 +23,20 @@ enum TransactionType {
 class Transaction with _$Transaction {
   const factory Transaction({
     required String id,
-    required String businessId,
-    required String customerId,
+    @JsonKey(name: 'business_id') required String businessId,
+    @JsonKey(name: 'customer_id') required String customerId,
     required TransactionType type,
 
     /// 품목 정보 (선택사항)
-    String? productId,
+    @JsonKey(name: 'product_id') String? productId,
     double? quantity,
-    double? unitPrice,
+    @JsonKey(name: 'unit_price') double? unitPrice,
 
     required double amount,
     required DateTime date,
     String? memo,
-    required DateTime createdAt,
-    required DateTime updatedAt,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt,
 
     /// JOIN 데이터 (조회 시에만)
     Customer? customer,

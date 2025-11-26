@@ -20,9 +20,7 @@ class CustomerListScreen extends ConsumerWidget {
             icon: const Icon(Icons.inventory_2),
             tooltip: '품목 관리',
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('품목 관리 화면은 구현 중입니다')),
-              );
+              context.go('/products');
             },
           ),
           IconButton(
@@ -81,11 +79,7 @@ class CustomerListScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('거래처 등록 화면은 구현 중입니다'),
-                        ),
-                      );
+                      context.go('/customers/new');
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('거래처 추가하기'),
@@ -115,13 +109,13 @@ class CustomerListScreen extends ConsumerWidget {
                   gradient: LinearGradient(
                     colors: [
                       Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.7),
+                      Theme.of(context).primaryColor.withValues(alpha: 0.7),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -253,11 +247,7 @@ class CustomerListScreen extends ConsumerWidget {
                           ],
                         ),
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${customer.name} 상세 화면 (구현 중)'),
-                            ),
-                          );
+                          context.go('/customers/${customer.id}');
                         },
                       ),
                     );
@@ -300,9 +290,7 @@ class CustomerListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('거래처 추가 화면은 구현 중입니다')),
-          );
+          context.go('/customers/new');
         },
         icon: const Icon(Icons.add),
         label: const Text('거래처 추가'),

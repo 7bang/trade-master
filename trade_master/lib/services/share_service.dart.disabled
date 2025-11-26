@@ -50,7 +50,7 @@ class ShareService {
         subject: '거래 명세서',
       );
     } catch (e) {
-      print('공유 실패: $e');
+      // 에러 발생 시 재throw하여 호출자가 처리하도록 함
       rethrow;
     }
   }

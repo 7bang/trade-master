@@ -9,17 +9,17 @@ part of 'transaction.dart';
 _$TransactionImpl _$$TransactionImplFromJson(Map<String, dynamic> json) =>
     _$TransactionImpl(
       id: json['id'] as String,
-      businessId: json['businessId'] as String,
-      customerId: json['customerId'] as String,
+      businessId: json['business_id'] as String,
+      customerId: json['customer_id'] as String,
       type: $enumDecode(_$TransactionTypeEnumMap, json['type']),
-      productId: json['productId'] as String?,
+      productId: json['product_id'] as String?,
       quantity: (json['quantity'] as num?)?.toDouble(),
-      unitPrice: (json['unitPrice'] as num?)?.toDouble(),
+      unitPrice: (json['unit_price'] as num?)?.toDouble(),
       amount: (json['amount'] as num).toDouble(),
       date: DateTime.parse(json['date'] as String),
       memo: json['memo'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
       customer: json['customer'] == null
           ? null
           : Customer.fromJson(json['customer'] as Map<String, dynamic>),
@@ -31,17 +31,17 @@ _$TransactionImpl _$$TransactionImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$TransactionImplToJson(_$TransactionImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'businessId': instance.businessId,
-      'customerId': instance.customerId,
+      'business_id': instance.businessId,
+      'customer_id': instance.customerId,
       'type': _$TransactionTypeEnumMap[instance.type]!,
-      'productId': instance.productId,
+      'product_id': instance.productId,
       'quantity': instance.quantity,
-      'unitPrice': instance.unitPrice,
+      'unit_price': instance.unitPrice,
       'amount': instance.amount,
       'date': instance.date.toIso8601String(),
       'memo': instance.memo,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
       'customer': instance.customer,
       'product': instance.product,
     };

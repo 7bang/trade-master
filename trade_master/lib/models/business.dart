@@ -10,11 +10,11 @@ part 'business.g.dart';
 class Business with _$Business {
   const factory Business({
     required String id,
-    required String userId,
+    @JsonKey(name: 'user_id') required String userId,
     required String name,
     String? phone,
-    required DateTime createdAt,
-    required DateTime updatedAt,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt,
   }) = _Business;
 
   factory Business.fromJson(Map<String, dynamic> json) =>

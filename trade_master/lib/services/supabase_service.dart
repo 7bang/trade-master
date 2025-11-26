@@ -59,9 +59,15 @@ class SupabaseService {
 
   /// 사업장 정보 생성
   Future<Business> createBusiness(Business business) async {
+    // id, created_at, updated_at은 DB에서 자동 생성되므로 제외
+    final data = business.toJson();
+    data.remove('id');
+    data.remove('created_at');
+    data.remove('updated_at');
+
     final response = await _client
         .from('businesses')
-        .insert(business.toJson())
+        .insert(data)
         .select()
         .single();
 
@@ -105,9 +111,16 @@ class SupabaseService {
 
   /// 거래처 생성
   Future<Customer> createCustomer(Customer customer) async {
+    // id, created_at, updated_at은 DB에서 자동 생성되므로 제외
+    final data = customer.toJson();
+    data.remove('id');
+    data.remove('created_at');
+    data.remove('updated_at');
+    data.remove('balance'); // 조회 전용 필드
+
     final response = await _client
         .from('customers')
-        .insert(customer.toJson())
+        .insert(data)
         .select()
         .single();
 
@@ -159,9 +172,15 @@ class SupabaseService {
 
   /// 품목 생성
   Future<Product> createProduct(Product product) async {
+    // id, created_at, updated_at은 DB에서 자동 생성되므로 제외
+    final data = product.toJson();
+    data.remove('id');
+    data.remove('created_at');
+    data.remove('updated_at');
+
     final response = await _client
         .from('products')
-        .insert(product.toJson())
+        .insert(data)
         .select()
         .single();
 
@@ -217,9 +236,17 @@ class SupabaseService {
 
   /// 거래 생성
   Future<Transaction> createTransaction(Transaction transaction) async {
+    // id, created_at, updated_at은 DB에서 자동 생성되므로 제외
+    final data = transaction.toJson();
+    data.remove('id');
+    data.remove('created_at');
+    data.remove('updated_at');
+    data.remove('customer'); // JOIN 데이터 (조회 전용)
+    data.remove('product'); // JOIN 데이터 (조회 전용)
+
     final response = await _client
         .from('transactions')
-        .insert(transaction.toJson())
+        .insert(data)
         .select()
         .single();
 

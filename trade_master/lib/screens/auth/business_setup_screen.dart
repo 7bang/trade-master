@@ -2,51 +2,80 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
-import '../../utils/validators.dart';
+import '../../models/business.dart';
 
-/// 로그인 화면
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+/// 사업장 정보 설정 화면
+///
+/// 회원가입 후 최초 1회 표시됩니다.
+class BusinessSetupScreen extends ConsumerStatefulWidget {
+  const BusinessSetupScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<BusinessSetupScreen> createState() =>
+      _BusinessSetupScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
-  Future<void> _signIn() async {
+  Future<void> _saveBusiness() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
       final service = ref.read(supabaseServiceProvider);
-      await service.signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
+      final user = service.currentUser;
+
+      if (user == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
+      // 사업장 정보 생성
+      final business = Business(
+        id: '', // Supabase에서 자동 생성
+        userId: user.id,
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
 
+      await service.createBusiness(business);
+
+      // Provider 갱신
+      ref.invalidate(currentBusinessProvider);
+
       if (mounted) {
+        // 성공 메시지
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('사업장 정보가 저장되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // 거래처 목록 화면으로 이동
         context.go('/customers');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그인 실패: ${e.toString()}'),
+            content: Text('저장 실패: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -61,6 +90,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('사업장 정보 입력'),
+        automaticallyImplyLeading: false, // 뒤로가기 버튼 숨김
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -71,23 +104,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 로고
+                  // 헤더
                   Icon(
-                    Icons.account_balance_wallet,
+                    Icons.store,
                     size: 80,
                     color: Theme.of(context).primaryColor,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '거래의장인',
+                    '사업장 정보를 입력해주세요',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '소상공인을 위한 거래장 관리',
+                    '나중에 설정에서 변경할 수 있습니다',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,
@@ -95,52 +128,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // 이메일 입력
+                  // 사업장 이름 입력
                   TextFormField(
-                    controller: _emailController,
+                    controller: _nameController,
                     decoration: const InputDecoration(
-                      labelText: '이메일',
-                      hintText: 'example@email.com',
-                      prefixIcon: Icon(Icons.email),
+                      labelText: '사업장 이름',
+                      hintText: '예: 제주 청과물 가게',
+                      prefixIcon: Icon(Icons.business),
+                      helperText: '거래 명세서에 표시됩니다',
                     ),
-                    keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    validator: Validators.validateEmail,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return '사업장 이름을 입력하세요';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 
-                  // 비밀번호 입력
+                  // 연락처 입력 (선택사항)
                   TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: '비밀번호',
-                      hintText: '6자 이상',
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: '연락처 (선택사항)',
+                      hintText: '예: 010-1234-5678',
+                      prefixIcon: Icon(Icons.phone),
+                      helperText: '거래 명세서에 표시됩니다',
                     ),
-                    obscureText: _obscurePassword,
+                    keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _signIn(),
-                    validator: Validators.validatePassword,
+                    onFieldSubmitted: (_) => _saveBusiness(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-                  // 로그인 버튼
+                  // 저장 버튼
                   SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signIn,
+                      onPressed: _isLoading ? null : _saveBusiness,
                       child: _isLoading
                           ? const SizedBox(
                               width: 20,
@@ -151,51 +177,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             )
                           : const Text(
-                              '로그인',
+                              '시작하기',
                               style: TextStyle(fontSize: 16),
                             ),
                     ),
                   ),
-                  const SizedBox(height: 16),
 
-                  // 회원가입 버튼
-                  TextButton(
-                    onPressed: () {
-                      context.go('/signup');
-                    },
-                    child: const Text('계정이 없으신가요? 회원가입'),
-                  ),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 48),
-
-                  // 데모 계정 안내
+                  // 안내 메시지
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
+                      border: Border.all(color: Colors.green.shade200),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.info_outline,
-                                size: 20, color: Colors.blue.shade700),
+                            Icon(Icons.check_circle_outline,
+                                size: 20, color: Colors.green.shade700),
                             const SizedBox(width: 8),
                             Text(
-                              '데모 계정',
+                              '거의 다 왔습니다!',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade700,
+                                color: Colors.green.shade700,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          '테스트를 위해 먼저 Supabase에서\n사용자를 생성해주세요.',
+                          '정보 입력 후 바로 거래처와 거래 내역을\n관리할 수 있습니다.',
                           style: TextStyle(fontSize: 12),
                         ),
                       ],

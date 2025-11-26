@@ -22,12 +22,16 @@ Customer _$CustomerFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Customer {
   String get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'business_id')
   String get businessId => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String? get phone => throw _privateConstructorUsedError;
   String? get memo => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
   /// 조회 시에만 사용 (DB에는 없음)
@@ -50,13 +54,13 @@ abstract class $CustomerCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String businessId,
+    @JsonKey(name: 'business_id') String businessId,
     String name,
     String? phone,
     String? memo,
-    bool isActive,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
     double balance,
   });
 }
@@ -141,13 +145,13 @@ abstract class _$$CustomerImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    String businessId,
+    @JsonKey(name: 'business_id') String businessId,
     String name,
     String? phone,
     String? memo,
-    bool isActive,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
     double balance,
   });
 }
@@ -224,13 +228,13 @@ class __$$CustomerImplCopyWithImpl<$Res>
 class _$CustomerImpl implements _Customer {
   const _$CustomerImpl({
     required this.id,
-    required this.businessId,
+    @JsonKey(name: 'business_id') required this.businessId,
     required this.name,
     this.phone,
     this.memo,
-    this.isActive = true,
-    required this.createdAt,
-    required this.updatedAt,
+    @JsonKey(name: 'is_active') this.isActive = true,
+    @JsonKey(name: 'created_at') required this.createdAt,
+    @JsonKey(name: 'updated_at') required this.updatedAt,
     this.balance = 0,
   });
 
@@ -240,6 +244,7 @@ class _$CustomerImpl implements _Customer {
   @override
   final String id;
   @override
+  @JsonKey(name: 'business_id')
   final String businessId;
   @override
   final String name;
@@ -248,11 +253,13 @@ class _$CustomerImpl implements _Customer {
   @override
   final String? memo;
   @override
-  @JsonKey()
+  @JsonKey(name: 'is_active')
   final bool isActive;
   @override
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   /// 조회 시에만 사용 (DB에는 없음)
@@ -317,13 +324,13 @@ class _$CustomerImpl implements _Customer {
 abstract class _Customer implements Customer {
   const factory _Customer({
     required final String id,
-    required final String businessId,
+    @JsonKey(name: 'business_id') required final String businessId,
     required final String name,
     final String? phone,
     final String? memo,
-    final bool isActive,
-    required final DateTime createdAt,
-    required final DateTime updatedAt,
+    @JsonKey(name: 'is_active') final bool isActive,
+    @JsonKey(name: 'created_at') required final DateTime createdAt,
+    @JsonKey(name: 'updated_at') required final DateTime updatedAt,
     final double balance,
   }) = _$CustomerImpl;
 
@@ -333,6 +340,7 @@ abstract class _Customer implements Customer {
   @override
   String get id;
   @override
+  @JsonKey(name: 'business_id')
   String get businessId;
   @override
   String get name;
@@ -341,10 +349,13 @@ abstract class _Customer implements Customer {
   @override
   String? get memo;
   @override
+  @JsonKey(name: 'is_active')
   bool get isActive;
   @override
+  @JsonKey(name: 'created_at')
   DateTime get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt;
 
   /// 조회 시에만 사용 (DB에는 없음)

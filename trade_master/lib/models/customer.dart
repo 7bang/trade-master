@@ -10,13 +10,13 @@ part 'customer.g.dart';
 class Customer with _$Customer {
   const factory Customer({
     required String id,
-    required String businessId,
+    @JsonKey(name: 'business_id') required String businessId,
     required String name,
     String? phone,
     String? memo,
-    @Default(true) bool isActive,
-    required DateTime createdAt,
-    required DateTime updatedAt,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt,
 
     /// 조회 시에만 사용 (DB에는 없음)
     @Default(0) double balance,

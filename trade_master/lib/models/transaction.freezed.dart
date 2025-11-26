@@ -22,18 +22,24 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Transaction {
   String get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'business_id')
   String get businessId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'customer_id')
   String get customerId => throw _privateConstructorUsedError;
   TransactionType get type => throw _privateConstructorUsedError;
 
   /// 품목 정보 (선택사항)
+  @JsonKey(name: 'product_id')
   String? get productId => throw _privateConstructorUsedError;
   double? get quantity => throw _privateConstructorUsedError;
+  @JsonKey(name: 'unit_price')
   double? get unitPrice => throw _privateConstructorUsedError;
   double get amount => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   String? get memo => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
   /// JOIN 데이터 (조회 시에만)
@@ -59,17 +65,17 @@ abstract class $TransactionCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String businessId,
-    String customerId,
+    @JsonKey(name: 'business_id') String businessId,
+    @JsonKey(name: 'customer_id') String customerId,
     TransactionType type,
-    String? productId,
+    @JsonKey(name: 'product_id') String? productId,
     double? quantity,
-    double? unitPrice,
+    @JsonKey(name: 'unit_price') double? unitPrice,
     double amount,
     DateTime date,
     String? memo,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
     Customer? customer,
     Product? product,
   });
@@ -211,17 +217,17 @@ abstract class _$$TransactionImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    String businessId,
-    String customerId,
+    @JsonKey(name: 'business_id') String businessId,
+    @JsonKey(name: 'customer_id') String customerId,
     TransactionType type,
-    String? productId,
+    @JsonKey(name: 'product_id') String? productId,
     double? quantity,
-    double? unitPrice,
+    @JsonKey(name: 'unit_price') double? unitPrice,
     double amount,
     DateTime date,
     String? memo,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
     Customer? customer,
     Product? product,
   });
@@ -329,17 +335,17 @@ class __$$TransactionImplCopyWithImpl<$Res>
 class _$TransactionImpl implements _Transaction {
   const _$TransactionImpl({
     required this.id,
-    required this.businessId,
-    required this.customerId,
+    @JsonKey(name: 'business_id') required this.businessId,
+    @JsonKey(name: 'customer_id') required this.customerId,
     required this.type,
-    this.productId,
+    @JsonKey(name: 'product_id') this.productId,
     this.quantity,
-    this.unitPrice,
+    @JsonKey(name: 'unit_price') this.unitPrice,
     required this.amount,
     required this.date,
     this.memo,
-    required this.createdAt,
-    required this.updatedAt,
+    @JsonKey(name: 'created_at') required this.createdAt,
+    @JsonKey(name: 'updated_at') required this.updatedAt,
     this.customer,
     this.product,
   });
@@ -350,18 +356,22 @@ class _$TransactionImpl implements _Transaction {
   @override
   final String id;
   @override
+  @JsonKey(name: 'business_id')
   final String businessId;
   @override
+  @JsonKey(name: 'customer_id')
   final String customerId;
   @override
   final TransactionType type;
 
   /// 품목 정보 (선택사항)
   @override
+  @JsonKey(name: 'product_id')
   final String? productId;
   @override
   final double? quantity;
   @override
+  @JsonKey(name: 'unit_price')
   final double? unitPrice;
   @override
   final double amount;
@@ -370,8 +380,10 @@ class _$TransactionImpl implements _Transaction {
   @override
   final String? memo;
   @override
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   /// JOIN 데이터 (조회 시에만)
@@ -451,17 +463,17 @@ class _$TransactionImpl implements _Transaction {
 abstract class _Transaction implements Transaction {
   const factory _Transaction({
     required final String id,
-    required final String businessId,
-    required final String customerId,
+    @JsonKey(name: 'business_id') required final String businessId,
+    @JsonKey(name: 'customer_id') required final String customerId,
     required final TransactionType type,
-    final String? productId,
+    @JsonKey(name: 'product_id') final String? productId,
     final double? quantity,
-    final double? unitPrice,
+    @JsonKey(name: 'unit_price') final double? unitPrice,
     required final double amount,
     required final DateTime date,
     final String? memo,
-    required final DateTime createdAt,
-    required final DateTime updatedAt,
+    @JsonKey(name: 'created_at') required final DateTime createdAt,
+    @JsonKey(name: 'updated_at') required final DateTime updatedAt,
     final Customer? customer,
     final Product? product,
   }) = _$TransactionImpl;
@@ -472,18 +484,22 @@ abstract class _Transaction implements Transaction {
   @override
   String get id;
   @override
+  @JsonKey(name: 'business_id')
   String get businessId;
   @override
+  @JsonKey(name: 'customer_id')
   String get customerId;
   @override
   TransactionType get type;
 
   /// 품목 정보 (선택사항)
   @override
+  @JsonKey(name: 'product_id')
   String? get productId;
   @override
   double? get quantity;
   @override
+  @JsonKey(name: 'unit_price')
   double? get unitPrice;
   @override
   double get amount;
@@ -492,8 +508,10 @@ abstract class _Transaction implements Transaction {
   @override
   String? get memo;
   @override
+  @JsonKey(name: 'created_at')
   DateTime get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt;
 
   /// JOIN 데이터 (조회 시에만)

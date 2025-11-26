@@ -10,16 +10,16 @@ part 'product.g.dart';
 class Product with _$Product {
   const factory Product({
     required String id,
-    required String businessId,
+    @JsonKey(name: 'business_id') required String businessId,
     required String name,
     String? code,
     String? category,
-    double? defaultUnitPrice,
+    @JsonKey(name: 'default_unit_price') double? defaultUnitPrice,
     @Default('개') String unit,
     String? description,
-    @Default(true) bool isActive,
-    required DateTime createdAt,
-    required DateTime updatedAt,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt,
   }) = _Product;
 
   factory Product.fromJson(Map<String, dynamic> json) =>

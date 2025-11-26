@@ -22,10 +22,13 @@ Business _$BusinessFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Business {
   String get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'user_id')
   String get userId => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String? get phone => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
   /// Serializes this Business to a JSON map.
@@ -45,11 +48,11 @@ abstract class $BusinessCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String userId,
+    @JsonKey(name: 'user_id') String userId,
     String name,
     String? phone,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
   });
 }
 
@@ -118,11 +121,11 @@ abstract class _$$BusinessImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    String userId,
+    @JsonKey(name: 'user_id') String userId,
     String name,
     String? phone,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
   });
 }
 
@@ -183,11 +186,11 @@ class __$$BusinessImplCopyWithImpl<$Res>
 class _$BusinessImpl implements _Business {
   const _$BusinessImpl({
     required this.id,
-    required this.userId,
+    @JsonKey(name: 'user_id') required this.userId,
     required this.name,
     this.phone,
-    required this.createdAt,
-    required this.updatedAt,
+    @JsonKey(name: 'created_at') required this.createdAt,
+    @JsonKey(name: 'updated_at') required this.updatedAt,
   });
 
   factory _$BusinessImpl.fromJson(Map<String, dynamic> json) =>
@@ -196,14 +199,17 @@ class _$BusinessImpl implements _Business {
   @override
   final String id;
   @override
+  @JsonKey(name: 'user_id')
   final String userId;
   @override
   final String name;
   @override
   final String? phone;
   @override
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   @override
@@ -248,11 +254,11 @@ class _$BusinessImpl implements _Business {
 abstract class _Business implements Business {
   const factory _Business({
     required final String id,
-    required final String userId,
+    @JsonKey(name: 'user_id') required final String userId,
     required final String name,
     final String? phone,
-    required final DateTime createdAt,
-    required final DateTime updatedAt,
+    @JsonKey(name: 'created_at') required final DateTime createdAt,
+    @JsonKey(name: 'updated_at') required final DateTime updatedAt,
   }) = _$BusinessImpl;
 
   factory _Business.fromJson(Map<String, dynamic> json) =
@@ -261,14 +267,17 @@ abstract class _Business implements Business {
   @override
   String get id;
   @override
+  @JsonKey(name: 'user_id')
   String get userId;
   @override
   String get name;
   @override
   String? get phone;
   @override
+  @JsonKey(name: 'created_at')
   DateTime get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt;
 
   /// Create a copy of Business

@@ -22,15 +22,20 @@ Product _$ProductFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Product {
   String get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'business_id')
   String get businessId => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String? get code => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
+  @JsonKey(name: 'default_unit_price')
   double? get defaultUnitPrice => throw _privateConstructorUsedError;
   String get unit => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
   /// Serializes this Product to a JSON map.
@@ -49,16 +54,16 @@ abstract class $ProductCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String businessId,
+    @JsonKey(name: 'business_id') String businessId,
     String name,
     String? code,
     String? category,
-    double? defaultUnitPrice,
+    @JsonKey(name: 'default_unit_price') double? defaultUnitPrice,
     String unit,
     String? description,
-    bool isActive,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
   });
 }
 
@@ -151,16 +156,16 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String businessId,
+    @JsonKey(name: 'business_id') String businessId,
     String name,
     String? code,
     String? category,
-    double? defaultUnitPrice,
+    @JsonKey(name: 'default_unit_price') double? defaultUnitPrice,
     String unit,
     String? description,
-    bool isActive,
-    DateTime createdAt,
-    DateTime updatedAt,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'created_at') DateTime createdAt,
+    @JsonKey(name: 'updated_at') DateTime updatedAt,
   });
 }
 
@@ -246,16 +251,16 @@ class __$$ProductImplCopyWithImpl<$Res>
 class _$ProductImpl implements _Product {
   const _$ProductImpl({
     required this.id,
-    required this.businessId,
+    @JsonKey(name: 'business_id') required this.businessId,
     required this.name,
     this.code,
     this.category,
-    this.defaultUnitPrice,
+    @JsonKey(name: 'default_unit_price') this.defaultUnitPrice,
     this.unit = '개',
     this.description,
-    this.isActive = true,
-    required this.createdAt,
-    required this.updatedAt,
+    @JsonKey(name: 'is_active') this.isActive = true,
+    @JsonKey(name: 'created_at') required this.createdAt,
+    @JsonKey(name: 'updated_at') required this.updatedAt,
   });
 
   factory _$ProductImpl.fromJson(Map<String, dynamic> json) =>
@@ -264,6 +269,7 @@ class _$ProductImpl implements _Product {
   @override
   final String id;
   @override
+  @JsonKey(name: 'business_id')
   final String businessId;
   @override
   final String name;
@@ -272,6 +278,7 @@ class _$ProductImpl implements _Product {
   @override
   final String? category;
   @override
+  @JsonKey(name: 'default_unit_price')
   final double? defaultUnitPrice;
   @override
   @JsonKey()
@@ -279,11 +286,13 @@ class _$ProductImpl implements _Product {
   @override
   final String? description;
   @override
-  @JsonKey()
+  @JsonKey(name: 'is_active')
   final bool isActive;
   @override
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   @override
@@ -350,16 +359,16 @@ class _$ProductImpl implements _Product {
 abstract class _Product implements Product {
   const factory _Product({
     required final String id,
-    required final String businessId,
+    @JsonKey(name: 'business_id') required final String businessId,
     required final String name,
     final String? code,
     final String? category,
-    final double? defaultUnitPrice,
+    @JsonKey(name: 'default_unit_price') final double? defaultUnitPrice,
     final String unit,
     final String? description,
-    final bool isActive,
-    required final DateTime createdAt,
-    required final DateTime updatedAt,
+    @JsonKey(name: 'is_active') final bool isActive,
+    @JsonKey(name: 'created_at') required final DateTime createdAt,
+    @JsonKey(name: 'updated_at') required final DateTime updatedAt,
   }) = _$ProductImpl;
 
   factory _Product.fromJson(Map<String, dynamic> json) = _$ProductImpl.fromJson;
@@ -367,6 +376,7 @@ abstract class _Product implements Product {
   @override
   String get id;
   @override
+  @JsonKey(name: 'business_id')
   String get businessId;
   @override
   String get name;
@@ -375,16 +385,20 @@ abstract class _Product implements Product {
   @override
   String? get category;
   @override
+  @JsonKey(name: 'default_unit_price')
   double? get defaultUnitPrice;
   @override
   String get unit;
   @override
   String? get description;
   @override
+  @JsonKey(name: 'is_active')
   bool get isActive;
   @override
+  @JsonKey(name: 'created_at')
   DateTime get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime get updatedAt;
 
   /// Create a copy of Product

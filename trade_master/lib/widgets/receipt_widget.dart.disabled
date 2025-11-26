@@ -1,0 +1,441 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../models/customer.dart';
+import '../models/transaction.dart' as models;
+import '../utils/formatters.dart';
+
+/// 공유용 영수증 위젯
+///
+/// 거래처의 거래 내역을 영수증 형태로 표시합니다.
+/// screenshot 패키지와 함께 사용하여 이미지로 변환 후 공유할 수 있습니다.
+class ReceiptWidget extends StatelessWidget {
+  final Customer customer;
+  final List<models.Transaction> transactions;
+
+  const ReceiptWidget({
+    super.key,
+    required this.customer,
+    required this.transactions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 총 매출/매입 계산
+    final totalReceivable = transactions
+        .where((t) => t.type == models.TransactionType.receivable)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final totalPayable = transactions
+        .where((t) => t.type == models.TransactionType.payable)
+        .fold(0.0, (sum, t) => sum + t.amount);
+
+    return Container(
+      width: 600,
+      color: Colors.white,
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 헤더
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF1976D2),
+                  Color(0xFF1565C0),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  '거래의장인',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '거래 명세서',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white30),
+                const SizedBox(height: 16),
+                Text(
+                  DateFormat('yyyy년 MM월 dd일').format(DateTime.now()),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 거래처 정보
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.business, color: Color(0xFF1976D2)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      '거래처 정보',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  customer.name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (customer.phone != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        customer.phone!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 거래 내역
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.receipt_long, color: Color(0xFF1976D2)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      '거래 내역',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '총 ${transactions.length}건',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+
+                // 거래 목록
+                ...transactions.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final transaction = entry.value;
+                  final isReceivable =
+                      transaction.type == models.TransactionType.receivable;
+
+                  return Column(
+                    children: [
+                      if (index > 0) const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isReceivable
+                              ? Colors.green.shade50
+                              : Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      isReceivable
+                                          ? Icons.arrow_downward
+                                          : Icons.arrow_upward,
+                                      size: 16,
+                                      color: isReceivable
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isReceivable ? '받을 돈' : '줄 돈',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: isReceivable
+                                            ? Colors.green.shade700
+                                            : Colors.red.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  Formatters.formatDate(transaction.date),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (transaction.product != null) ...[
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    transaction.product!.name,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${transaction.quantity?.toStringAsFixed(1) ?? '-'} ${transaction.product!.unit}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '단가',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    Formatters.formatCurrency(
+                                      transaction.unitPrice ?? 0,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 16),
+                            ],
+                            if (transaction.memo != null &&
+                                transaction.memo!.isNotEmpty) ...[
+                              Text(
+                                transaction.memo!,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '금액: ',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                Text(
+                                  Formatters.formatCurrency(transaction.amount),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isReceivable
+                                        ? Colors.green.shade700
+                                        : Colors.red.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 합계
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.grey.shade100,
+                  Colors.grey.shade50,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300, width: 2),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.arrow_downward,
+                          size: 18,
+                          color: Colors.green.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          '받을 돈 합계',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      Formatters.formatCurrency(totalReceivable),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.arrow_upward,
+                          size: 18,
+                          color: Colors.red.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          '줄 돈 합계',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      Formatters.formatCurrency(totalPayable),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '현재 잔액',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          Formatters.formatCurrency(customer.balance.abs()),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1976D2),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          Formatters.formatBalanceType(customer.balance),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // 푸터
+          Center(
+            child: Text(
+              '거래의장인 - 소상공인을 위한 거래장 관리',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
