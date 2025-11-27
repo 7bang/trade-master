@@ -5,15 +5,93 @@ import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/receipts/transaction_receipt_widget.dart';
 
 /// 거래 상세 화면
-class TransactionDetailScreen extends ConsumerWidget {
+class TransactionDetailScreen extends ConsumerStatefulWidget {
   final String transactionId;
 
   const TransactionDetailScreen({
     super.key,
     required this.transactionId,
   });
+
+  @override
+  ConsumerState<TransactionDetailScreen> createState() =>
+      _TransactionDetailScreenState();
+}
+
+class _TransactionDetailScreenState
+    extends ConsumerState<TransactionDetailScreen> {
+  final GlobalKey _receiptKey = GlobalKey();
+
+  // 영수증 공유
+  Future<void> _shareReceipt(Transaction transaction) async {
+    try {
+      final shareService = ref.read(shareServiceProvider);
+      final businessAsync = ref.read(currentBusinessProvider);
+
+      final business = await businessAsync.value;
+      if (business == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('사업장 정보를 불러올 수 없습니다')),
+          );
+        }
+        return;
+      }
+
+      // 공유 대화상자 표시
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      // 약간의 지연 (위젯 렌더링 대기)
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final success = await shareService.shareWidget(
+        widgetKey: _receiptKey,
+        fileName: 'receipt_${DateTime.now().millisecondsSinceEpoch}',
+        text: '${transaction.customer?.name ?? '거래처'} 거래 영수증',
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // 로딩 대화상자 닫기
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('영수증을 공유했습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('영수증 공유에 실패했습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // 로딩 대화상자 닫기
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _deleteTransaction(
     BuildContext context,
@@ -42,7 +120,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       try {
         final service = ref.read(supabaseServiceProvider);
-        await service.deleteTransaction(transactionId);
+        await service.deleteTransaction(widget.transactionId);
 
         // Provider 갱신
         ref.invalidate(transactionsProvider);
@@ -72,8 +150,8 @@ class TransactionDetailScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final transactionAsync = ref.watch(transactionProvider(transactionId));
+  Widget build(BuildContext context) {
+    final transactionAsync = ref.watch(transactionProvider(widget.transactionId));
 
     return Scaffold(
       appBar: AppBar(
@@ -83,6 +161,11 @@ class TransactionDetailScreen extends ConsumerWidget {
                 data: (transaction) {
                   return Row(
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.share),
+                        tooltip: '영수증 공유',
+                        onPressed: () => _shareReceipt(transaction),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.edit),
                         tooltip: '수정',
@@ -108,8 +191,12 @@ class TransactionDetailScreen extends ConsumerWidget {
       body: transactionAsync.when(
         data: (transaction) {
           final isReceivable = transaction.type == TransactionType.receivable;
+          final businessAsync = ref.watch(currentBusinessProvider);
 
-          return SingleChildScrollView(
+          return Stack(
+            children: [
+              // 메인 콘텐츠
+              SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -363,6 +450,31 @@ class TransactionDetailScreen extends ConsumerWidget {
                 ),
               ],
             ),
+              ),
+
+              // 숨겨진 영수증 위젯 (캡처용)
+              Positioned(
+                left: -10000,
+                top: 0,
+                child: businessAsync.when(
+                  data: (business) {
+                    if (business == null || transaction.customer == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return RepaintBoundary(
+                      key: _receiptKey,
+                      child: TransactionReceiptWidget(
+                        transaction: transaction,
+                        customer: transaction.customer!,
+                        businessName: business.name,
+                      ),
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

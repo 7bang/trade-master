@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
-// import '../services/share_service.dart'; // Temporarily disabled
+import '../services/share_service.dart';
 import '../models/business.dart';
 import '../models/customer.dart';
 import '../models/product.dart';
@@ -12,8 +12,8 @@ import '../models/transaction.dart';
 /// Supabase 서비스 Provider
 final supabaseServiceProvider = Provider((ref) => SupabaseService());
 
-/// 공유 서비스 Provider (temporarily disabled)
-// final shareServiceProvider = Provider((ref) => ShareService());
+/// 공유 서비스 Provider
+final shareServiceProvider = Provider((ref) => ShareService());
 
 // ========== 인증 Providers ==========
 

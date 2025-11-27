@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
-// import '../../utils/share_utils.dart'; // Temporarily disabled
 import '../../models/transaction.dart' as models;
+import '../../widgets/receipts/customer_statement_widget.dart';
 
 /// 거래처 상세 화면
-class CustomerDetailScreen extends ConsumerWidget {
+class CustomerDetailScreen extends ConsumerStatefulWidget {
   final String customerId;
 
   const CustomerDetailScreen({
@@ -16,19 +16,147 @@ class CustomerDetailScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final customerAsync = ref.watch(customerProvider(customerId));
-    final transactionsAsync = ref.watch(transactionsProvider(customerId));
+  ConsumerState<CustomerDetailScreen> createState() =>
+      _CustomerDetailScreenState();
+}
+
+class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
+  final GlobalKey _statementKey = GlobalKey();
+
+  // 내역서 공유
+  Future<void> _shareStatement() async {
+    try {
+      final customerAsync = ref.read(customerProvider(widget.customerId));
+      final transactionsAsync =
+          ref.read(transactionsProvider(widget.customerId));
+      final businessAsync = ref.read(currentBusinessProvider);
+
+      final customer = await customerAsync.value;
+      final transactions = await transactionsAsync.value;
+      final business = await businessAsync.value;
+
+      if (customer == null || business == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('정보를 불러올 수 없습니다')),
+          );
+        }
+        return;
+      }
+
+      // 50건 초과 시 경고
+      const maxTransactions = 50;
+      if (transactions != null && transactions.length > maxTransactions) {
+        if (mounted) {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text('거래 건수 초과'),
+                ],
+              ),
+              content: Text(
+                '거래 내역이 ${transactions.length}건입니다.\n\n'
+                '이미지 공유는 최근 $maxTransactions건만 표시됩니다.\n'
+                '전체 내역은 추후 PDF 기능을 이용해주세요.\n\n'
+                '계속하시겠습니까?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('취소'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('계속'),
+                ),
+              ],
+            ),
+          );
+
+          if (confirmed != true) return;
+        }
+      }
+
+      // 공유 대화상자 표시
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      // 약간의 지연 (위젯 렌더링 대기)
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final shareService = ref.read(shareServiceProvider);
+      final success = await shareService.shareWidget(
+        widgetKey: _statementKey,
+        fileName:
+            'statement_${customer.name}_${DateTime.now().millisecondsSinceEpoch}',
+        text: '${customer.name} 거래 내역서',
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // 로딩 대화상자 닫기
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('내역서를 공유했습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('내역서 공유에 실패했습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // 로딩 대화상자 닫기
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final customerAsync = ref.watch(customerProvider(widget.customerId));
+    final transactionsAsync = ref.watch(transactionsProvider(widget.customerId));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('거래처 상세'),
         actions: [
+          customerAsync.whenOrNull(
+                data: (customer) => IconButton(
+                  icon: const Icon(Icons.share),
+                  tooltip: '내역서 공유',
+                  onPressed: _shareStatement,
+                ),
+              ) ??
+              const SizedBox.shrink(),
           IconButton(
             icon: const Icon(Icons.edit),
             tooltip: '수정',
             onPressed: () {
-              context.go('/customers/$customerId/edit');
+              context.go('/customers/${widget.customerId}/edit');
             },
           ),
           PopupMenuButton<String>(
@@ -53,58 +181,93 @@ class CustomerDetailScreen extends ConsumerWidget {
         ],
       ),
       body: customerAsync.when(
-        data: (customer) => Column(
-          children: [
-            // 거래처 정보 카드
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
+        data: (customer) {
+          final businessAsync = ref.watch(currentBusinessProvider);
+
+          return Stack(
+            children: [
+              // 메인 콘텐츠
+              Column(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Theme.of(context).primaryColor,
+                  // 거래처 정보 카드
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    customer.name,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  if (customer.phone != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
                       children: [
-                        const Icon(Icons.phone, size: 16, color: Colors.white70),
-                        const SizedBox(width: 4),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         Text(
-                          customer.phone!,
+                          customer.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (customer.phone != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.phone,
+                                  size: 16, color: Colors.white70),
+                              const SizedBox(width: 4),
+                              Text(
+                                customer.phone!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const Divider(color: Colors.white30, height: 32),
+                        // 현재 잔액
+                        const Text(
+                          '현재 잔액',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          Formatters.formatCurrency(customer.balance.abs()),
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          Formatters.formatBalanceType(customer.balance),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
@@ -112,202 +275,210 @@ class CustomerDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                  ],
-                  const Divider(color: Colors.white30, height: 32),
-                  // 현재 잔액
-                  const Text(
-                    '현재 잔액',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    Formatters.formatCurrency(customer.balance.abs()),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    Formatters.formatBalanceType(customer.balance),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // 거래 내역 섹션
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '거래 내역',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  // Share button temporarily disabled due to build issue
-                  // transactionsAsync.whenOrNull(
-                  //   data: (transactions) => TextButton.icon(
-                  //     onPressed: () {
-                  //       ShareUtils.shareReceipt(
-                  //         context: context,
-                  //         customer: customer,
-                  //         transactions: transactions,
-                  //       );
-                  //     },
-                  //     icon: const Icon(Icons.share, size: 18),
-                  //     label: const Text('공유'),
-                  //   ),
-                  // ) ?? const SizedBox.shrink(),
-                ],
-              ),
-            ),
-
-            // 거래 목록
-            Expanded(
-              child: transactionsAsync.when(
-                data: (transactions) {
-                  if (transactions.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long,
-                            size: 64,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '거래 내역이 없습니다',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              context.go('/customers/$customerId/transactions/new');
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('거래 추가하기'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
+                  // 거래 내역 섹션
+                  Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: transactions.length,
-                    itemBuilder: (context, index) {
-                      final transaction = transactions[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: transaction.type ==
-                                    models.TransactionType.receivable
-                                ? Colors.green.shade100
-                                : Colors.red.shade100,
-                            child: Icon(
-                              transaction.type == models.TransactionType.receivable
-                                  ? Icons.arrow_downward
-                                  : Icons.arrow_upward,
-                              color: transaction.type ==
-                                      models.TransactionType.receivable
-                                  ? Colors.green.shade700
-                                  : Colors.red.shade700,
-                            ),
-                          ),
-                          title: Row(
-                            children: [
-                              Text(
-                                transaction.type == models.TransactionType.receivable
-                                    ? '💰 받을 돈'
-                                    : '💸 줄 돈',
-                              ),
-                              if (transaction.product != null) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '거래 내역',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    transaction.product!.name,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.blue.shade700,
-                                    ),
-                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 거래 목록
+                  Expanded(
+                    child: transactionsAsync.when(
+                      data: (transactions) {
+                        if (transactions.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long,
+                                  size: 64,
+                                  color: Colors.grey.shade400,
                                 ),
-                              ],
-                            ],
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                Formatters.formatDate(transaction.date),
-                              ),
-                              if (transaction.memo != null) ...[
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 16),
                                 Text(
-                                  transaction.memo!,
+                                  '거래 내역이 없습니다',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 16,
                                     color: Colors.grey.shade600,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    context.go(
+                                        '/customers/${widget.customerId}/transactions/new');
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('거래 추가하기'),
                                 ),
                               ],
-                            ],
-                          ),
-                          trailing: Text(
-                            '${transaction.type == models.TransactionType.receivable ? '+' : '-'}'
-                            '${Formatters.formatCurrency(transaction.amount)}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: transaction.type ==
-                                      models.TransactionType.receivable
-                                  ? Colors.green.shade700
-                                  : Colors.red.shade700,
                             ),
-                          ),
-                          onTap: () {
-                            context.go('/transactions/${transaction.id}');
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: transactions.length,
+                          itemBuilder: (context, index) {
+                            final transaction = transactions[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: transaction.type ==
+                                          models.TransactionType.receivable
+                                      ? Colors.green.shade100
+                                      : Colors.red.shade100,
+                                  child: Icon(
+                                    transaction.type ==
+                                            models.TransactionType.receivable
+                                        ? Icons.arrow_downward
+                                        : Icons.arrow_upward,
+                                    color: transaction.type ==
+                                            models.TransactionType.receivable
+                                        ? Colors.green.shade700
+                                        : Colors.red.shade700,
+                                  ),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Text(
+                                      transaction.type ==
+                                              models.TransactionType.receivable
+                                          ? '💰 받을 돈'
+                                          : '💸 줄 돈',
+                                    ),
+                                    if (transaction.product != null) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          transaction.product!.name,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      Formatters.formatDate(transaction.date),
+                                    ),
+                                    if (transaction.memo != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        transaction.memo!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                trailing: Text(
+                                  '${transaction.type == models.TransactionType.receivable ? '+' : '-'}'
+                                  '${Formatters.formatCurrency(transaction.amount)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: transaction.type ==
+                                            models.TransactionType.receivable
+                                        ? Colors.green.shade700
+                                        : Colors.red.shade700,
+                                  ),
+                                ),
+                                onTap: () {
+                                  context.go('/transactions/${transaction.id}');
+                                },
+                              ),
+                            );
                           },
-                        ),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, _) => Center(
-                  child: Text('에러: $err'),
+                        );
+                      },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (err, _) => Center(
+                        child: Text('에러: $err'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // 숨겨진 내역서 위젯 (캡처용)
+              Positioned(
+                left: -10000,
+                top: 0,
+                child: transactionsAsync.when(
+                  data: (transactions) {
+                    return businessAsync.when(
+                      data: (business) {
+                        if (business == null) {
+                          return const SizedBox.shrink();
+                        }
+
+                        // 전체 거래 내역 기간 계산
+                        DateTime startDate = DateTime.now();
+                        DateTime endDate = DateTime.now();
+
+                        if (transactions.isNotEmpty) {
+                          startDate = transactions.last.date;
+                          endDate = transactions.first.date;
+                        }
+
+                        return RepaintBoundary(
+                          key: _statementKey,
+                          child: CustomerStatementWidget(
+                            customer: customer,
+                            transactions: transactions,
+                            startDate: startDate,
+                            endDate: endDate,
+                            businessName: business.name,
+                          ),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
           child: Column(
@@ -322,7 +493,7 @@ class CustomerDetailScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          context.go('/customers/$customerId/transactions/new');
+          context.go('/customers/${widget.customerId}/transactions/new');
         },
         icon: const Icon(Icons.add),
         label: const Text('거래 추가'),
@@ -360,7 +531,7 @@ class CustomerDetailScreen extends ConsumerWidget {
   Future<void> _deleteCustomer(BuildContext context, WidgetRef ref) async {
     try {
       final service = ref.read(supabaseServiceProvider);
-      await service.deleteCustomer(customerId);
+      await service.deleteCustomer(widget.customerId);
 
       // Provider 갱신
       ref.invalidate(customersProvider);
