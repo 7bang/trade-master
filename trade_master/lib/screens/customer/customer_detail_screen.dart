@@ -419,7 +419,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                   ),
                                 ),
                                 onTap: () {
-                                  context.go('/transactions/${transaction.id}');
+                                  context.push('/transactions/${transaction.id}');
                                 },
                               ),
                             );
