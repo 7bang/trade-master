@@ -20,6 +20,7 @@ import 'screens/transaction/transaction_list_screen.dart';
 import 'screens/transaction/transaction_form_screen.dart';
 import 'screens/transaction/transaction_detail_screen.dart';
 import 'screens/settings/settings_screen.dart';
+import 'screens/settings/business_edit_screen.dart';
 
 void main() async {
   // Flutter 초기화
@@ -156,6 +157,17 @@ class _MyAppState extends ConsumerState<MyApp> {
                             return TransactionFormScreen(customerId: customerId);
                           },
                         ),
+                        GoRoute(
+                          path: 'transactions/:transactionId/edit',
+                          builder: (context, state) {
+                            final customerId = state.pathParameters['id']!;
+                            final transactionId = state.pathParameters['transactionId']!;
+                            return TransactionFormScreen(
+                              customerId: customerId,
+                              transactionId: transactionId,
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -202,6 +214,12 @@ class _MyAppState extends ConsumerState<MyApp> {
                 GoRoute(
                   path: '/settings',
                   builder: (context, state) => const SettingsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'business/edit',
+                      builder: (context, state) => const BusinessEditScreen(),
+                    ),
+                  ],
                 ),
               ],
             ),

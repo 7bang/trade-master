@@ -1,4 +1,4 @@
-package com.example.trade_master
+package com.trademaster.trademaster
 
 import io.flutter.embedding.android.FlutterActivity
 

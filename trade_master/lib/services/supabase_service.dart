@@ -212,7 +212,6 @@ class SupabaseService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    // TODO: 날짜 필터링 기능은 추후 구현
     var query = _client
         .from('transactions')
         .select('*, customer:customers(*), product:products(*)');
@@ -221,6 +220,14 @@ class SupabaseService {
       query = query.eq('customer_id', customerId);
     } else if (businessId != null) {
       query = query.eq('business_id', businessId);
+    }
+
+    // 날짜 필터링
+    if (startDate != null) {
+      query = query.gte('date', startDate.toIso8601String().split('T')[0]);
+    }
+    if (endDate != null) {
+      query = query.lte('date', endDate.toIso8601String().split('T')[0]);
     }
 
     final response = await query.order('date', ascending: false);

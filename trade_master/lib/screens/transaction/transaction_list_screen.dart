@@ -5,19 +5,49 @@ import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
 
-/// 전체 거래내역 Provider
-final allTransactionsProvider = FutureProvider<List<Transaction>>((ref) async {
+/// 전체 거래내역 Provider (날짜 필터 지원)
+final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
   final service = ref.watch(supabaseServiceProvider);
   final business = await ref.watch(currentBusinessProvider.future);
 
   if (business == null) return [];
 
-  return await service.getTransactions(businessId: business.id);
+  return await service.getTransactions(
+    businessId: business.id,
+    startDate: filter.startDate,
+    endDate: filter.endDate,
+  );
 });
 
+/// 날짜 필터 클래스
+class DateFilter {
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const DateFilter({this.startDate, this.endDate});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DateFilter &&
+          runtimeType == other.runtimeType &&
+          startDate == other.startDate &&
+          endDate == other.endDate;
+
+  @override
+  int get hashCode => startDate.hashCode ^ endDate.hashCode;
+}
+
 /// 전체 거래내역 화면
-class TransactionListScreen extends ConsumerWidget {
+class TransactionListScreen extends ConsumerStatefulWidget {
   const TransactionListScreen({super.key});
+
+  @override
+  ConsumerState<TransactionListScreen> createState() => _TransactionListScreenState();
+}
+
+class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
+  DateFilter _dateFilter = const DateFilter();
 
   // 거래처 선택 다이얼로그
   Future<void> _showCustomerSelectionDialog(
@@ -96,13 +126,22 @@ class TransactionListScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final transactionsAsync = ref.watch(allTransactionsProvider);
+  Widget build(BuildContext context) {
+    final transactionsAsync = ref.watch(allTransactionsProvider(_dateFilter));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('거래 내역'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            tooltip: '기간 필터',
+            onPressed: () {
+              _showDateFilterDialog();
+            },
+          ),
+        ],
       ),
       body: transactionsAsync.when(
         data: (transactions) {
@@ -242,5 +281,113 @@ class TransactionListScreen extends ConsumerWidget {
         label: const Text('거래 추가'),
       ),
     );
+  }
+
+  // 날짜 필터 다이얼로그
+  void _showDateFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.filter_list),
+            SizedBox(width: 8),
+            Text('기간 필터'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: const Text('이번 달'),
+              onTap: () {
+                final now = DateTime.now();
+                final startOfMonth = DateTime(now.year, now.month, 1);
+                final endOfMonth = DateTime(now.year, now.month + 1, 0);
+                setState(() {
+                  _dateFilter = DateFilter(
+                    startDate: startOfMonth,
+                    endDate: endOfMonth,
+                  );
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month),
+              title: const Text('지난 달'),
+              onTap: () {
+                final now = DateTime.now();
+                final lastMonth = DateTime(now.year, now.month - 1, 1);
+                final endOfLastMonth = DateTime(now.year, now.month, 0);
+                setState(() {
+                  _dateFilter = DateFilter(
+                    startDate: lastMonth,
+                    endDate: endOfLastMonth,
+                  );
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.date_range),
+              title: const Text('사용자 정의'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _showCustomDateRangePicker();
+              },
+            ),
+            if (_dateFilter.startDate != null || _dateFilter.endDate != null)
+              ListTile(
+                leading: const Icon(Icons.clear),
+                title: const Text('필터 초기화'),
+                onTap: () {
+                  setState(() {
+                    _dateFilter = const DateFilter();
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 사용자 정의 날짜 범위 선택
+  Future<void> _showCustomDateRangePicker() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: _dateFilter.startDate != null && _dateFilter.endDate != null
+          ? DateTimeRange(
+              start: _dateFilter.startDate!,
+              end: _dateFilter.endDate!,
+            )
+          : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dateFilter = DateFilter(
+          startDate: picked.start,
+          endDate: picked.end,
+        );
+      });
+    }
   }
 }

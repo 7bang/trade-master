@@ -5,58 +5,96 @@ import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
 
 /// 거래처 목록 화면
-class CustomerListScreen extends ConsumerWidget {
+class CustomerListScreen extends ConsumerStatefulWidget {
   const CustomerListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomerListScreen> createState() => _CustomerListScreenState();
+}
+
+class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
     final customersAsync = ref.watch(customersProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('거래의장인'),
+        title: _searchQuery.isEmpty
+            ? const Text('거래의장인')
+            : Text('검색: $_searchQuery'),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
             tooltip: '검색',
             onPressed: () {
-              // TODO: 거래처 검색 기능 구현
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('검색 기능 준비중')),
-              );
+              _showSearchDialog();
             },
           ),
+          if (_searchQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              tooltip: '검색 초기화',
+              onPressed: () {
+                setState(() {
+                  _searchQuery = '';
+                });
+              },
+            ),
         ],
       ),
       body: customersAsync.when(
-        data: (customers) {
+        data: (allCustomers) {
+          // 검색 필터링
+          final customers = _searchQuery.isEmpty
+              ? allCustomers
+              : allCustomers.where((customer) {
+                  final query = _searchQuery.toLowerCase();
+                  final nameMatch = customer.name.toLowerCase().contains(query);
+                  final phoneMatch = customer.phone?.toLowerCase().contains(query) ?? false;
+                  return nameMatch || phoneMatch;
+                }).toList();
           if (customers.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.people_outline,
+                    _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
                     size: 80,
                     color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '등록된 거래처가 없습니다',
+                    _searchQuery.isEmpty
+                        ? '등록된 거래처가 없습니다'
+                        : '검색 결과가 없습니다',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey.shade600,
                     ),
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.push('/customers/new');
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('거래처 추가하기'),
-                  ),
+                  if (_searchQuery.isEmpty)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.push('/customers/new');
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('거래처 추가하기'),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _searchQuery = '';
+                        });
+                      },
+                      icon: const Icon(Icons.clear),
+                      label: const Text('검색 초기화'),
+                    ),
                 ],
               ),
             );
@@ -267,6 +305,64 @@ class CustomerListScreen extends ConsumerWidget {
         },
         icon: const Icon(Icons.add),
         label: const Text('거래처 추가'),
+      ),
+    );
+  }
+
+  // 검색 다이얼로그 표시
+  void _showSearchDialog() {
+    final controller = TextEditingController(text: _searchQuery);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.search),
+            SizedBox(width: 8),
+            Text('거래처 검색'),
+          ],
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: '거래처명 또는 연락처 입력',
+            prefixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (value) {
+            setState(() {
+              _searchQuery = value.trim();
+            });
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          if (_searchQuery.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _searchQuery = '';
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('초기화'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _searchQuery = controller.text.trim();
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('검색'),
+          ),
+        ],
       ),
     );
   }

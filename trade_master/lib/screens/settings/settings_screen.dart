@@ -47,10 +47,7 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: Text(business.phone ?? '연락처 없음'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // TODO: 사업장 정보 수정 화면
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('사업장 정보 수정 기능 준비중')),
-                  );
+                  context.push('/settings/business/edit');
                 },
               );
             },
