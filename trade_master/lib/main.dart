@@ -59,7 +59,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: '거래의장인',
+      title: '거래클립',
       theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light, // 강제로 라이트 모드 사용
       routerConfig: _router,

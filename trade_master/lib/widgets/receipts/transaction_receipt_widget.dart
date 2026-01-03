@@ -176,7 +176,7 @@ class TransactionReceiptWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: ReceiptStyles.lineSpacing),
                 const Text(
-                  '거래의장인',
+                  '거래클립',
                   style: ReceiptStyles.smallStyle,
                 ),
                 const SizedBox(height: ReceiptStyles.paddingSmall),

@@ -1,0 +1,14 @@
+# Claude Code
+.claude/
+
+# Windows reserved filenames
+nul
+NUL
+
+# Build outputs
+trade_master/build/
+
+# Android signing (IMPORTANT: Keep these secret!)
+trade_master/android/key.properties
+trade_master/android/*.jks
+trade_master/android/*.keystore

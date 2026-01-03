@@ -105,7 +105,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '거래의장인과 함께 시작하세요',
+                    '거래클립과 함께 시작하세요',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,
@@ -247,7 +247,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          '회원가입 후 사업장 정보를 입력하면\n바로 거래의장인을 사용할 수 있습니다.',
+                          '회원가입 후 사업장 정보를 입력하면\n바로 거래클립을 사용할 수 있습니다.',
                           style: TextStyle(fontSize: 12),
                         ),
                       ],

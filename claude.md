@@ -1,7 +1,7 @@
-# Trade Master - Claude Setup Documentation
+# TradeClip - Claude Setup Documentation
 
 ## Project Overview
-**거래의장인** - 소상공인을 위한 거래장 관리 Flutter 앱
+**거래클립** - 소상공인을 위한 거래장 관리 Flutter 앱
 Backend: Supabase (PostgreSQL + Authentication)
 
 ---
