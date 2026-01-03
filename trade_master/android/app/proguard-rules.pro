@@ -27,7 +27,7 @@
 -keep class * implements com.google.gson.JsonDeserializer
 
 # Keep data models
--keep class com.trademaster.trademaster.models.** { *; }
+-keep class com.tradeclip.tradeclip.models.** { *; }
 
 # Kotlin Serialization
 -keepattributes *Annotation*, InnerClasses
