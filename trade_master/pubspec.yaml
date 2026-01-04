@@ -1,4 +1,4 @@
-name: trade_master
+name: trade_clip
 description: "거래클립 - 소상공인을 위한 거래장 관리 앱"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
