@@ -186,120 +186,162 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
 
           return Stack(
             children: [
-              // 메인 콘텐츠
-              Column(
-                children: [
-                  // 거래처 정보 카드
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          customer.name,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        if (customer.phone != null) ...[
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.phone,
-                                  size: 16, color: Colors.white70),
-                              const SizedBox(width: 4),
-                              Text(
-                                customer.phone!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white70,
+              // 메인 콘텐츠 - CustomScrollView 사용
+              CustomScrollView(
+                slivers: [
+                  // 축소 가능한 헤더
+                  SliverAppBar(
+                    expandedHeight: 280,
+                    floating: false,
+                    pinned: true,
+                    automaticallyImplyLeading: false,
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    flexibleSpace: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // 현재 확장 비율 계산
+                        final maxHeight = 280.0;
+                        final minHeight = kToolbarHeight;
+                        final currentHeight = constraints.maxHeight;
+                        final percent = ((currentHeight - minHeight) / (maxHeight - minHeight)).clamp(0.0, 1.0);
+
+                        return FlexibleSpaceBar(
+                          centerTitle: true,
+                          title: percent < 0.5
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      customer.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      Formatters.formatCurrency(customer.balance.abs()),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: customer.balance >= 0
+                                            ? Colors.green.shade200
+                                            : Colors.red.shade200,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                          background: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Theme.of(context).primaryColor,
+                                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                                ],
+                              ),
+                            ),
+                            child: SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (percent > 0.5) ...[
+                                      CircleAvatar(
+                                        radius: 36,
+                                        backgroundColor: Colors.white,
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 36,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                    ],
+                                    Text(
+                                      customer.name,
+                                      style: TextStyle(
+                                        fontSize: 22 * percent + 16 * (1 - percent),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    if (customer.phone != null && percent > 0.4) ...[
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.phone,
+                                              size: 16, color: Colors.white70),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            customer.phone!,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                    if (percent > 0.4) const Divider(
+                                      color: Colors.white30,
+                                      height: 24,
+                                    ),
+                                    if (percent > 0.4) const Text(
+                                      '현재 잔액',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    if (percent > 0.4) const SizedBox(height: 6),
+                                    Text(
+                                      Formatters.formatCurrency(customer.balance.abs()),
+                                      style: TextStyle(
+                                        fontSize: 28 * percent + 14 * (1 - percent),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    if (percent > 0.4) Text(
+                                      Formatters.formatBalanceType(customer.balance),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ],
-                        const Divider(color: Colors.white30, height: 32),
-                        // 현재 잔액
-                        const Text(
-                          '현재 잔액',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          Formatters.formatCurrency(customer.balance.abs()),
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          Formatters.formatBalanceType(customer.balance),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
 
-                  // 거래 내역 섹션
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '거래 내역',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                      ],
+                  // 거래 내역 헤더
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        '거래 내역',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
                     ),
                   ),
 
                   // 거래 목록
-                  Expanded(
-                    child: transactionsAsync.when(
-                      data: (transactions) {
-                        if (transactions.isEmpty) {
-                          return Center(
+                  transactionsAsync.when(
+                    data: (transactions) {
+                      if (transactions.isEmpty) {
+                        return SliverFillRemaining(
+                          child: Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -327,108 +369,115 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                 ),
                               ],
                             ),
-                          );
-                        }
+                          ),
+                        );
+                      }
 
-                        return ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: transactions.length,
-                          itemBuilder: (context, index) {
-                            final transaction = transactions[index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: transaction.type ==
-                                          models.TransactionType.receivable
-                                      ? Colors.green.shade100
-                                      : Colors.red.shade100,
-                                  child: Icon(
-                                    transaction.type ==
+                      return SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final transaction = transactions[index];
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: transaction.type ==
                                             models.TransactionType.receivable
-                                        ? Icons.arrow_downward
-                                        : Icons.arrow_upward,
-                                    color: transaction.type ==
-                                            models.TransactionType.receivable
-                                        ? Colors.green.shade700
-                                        : Colors.red.shade700,
-                                  ),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Text(
+                                        ? Colors.green.shade100
+                                        : Colors.red.shade100,
+                                    child: Icon(
                                       transaction.type ==
                                               models.TransactionType.receivable
-                                          ? '💰 받을 돈'
-                                          : '💸 줄 돈',
+                                          ? Icons.arrow_downward
+                                          : Icons.arrow_upward,
+                                      color: transaction.type ==
+                                              models.TransactionType.receivable
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
                                     ),
-                                    if (transaction.product != null) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          transaction.product!.name,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.blue.shade700,
+                                  ),
+                                  title: Row(
+                                    children: [
+                                      Text(
+                                        transaction.type ==
+                                                models.TransactionType.receivable
+                                            ? '💰 받을 돈'
+                                            : '💸 줄 돈',
+                                      ),
+                                      if (transaction.product != null) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            transaction.product!.name,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.blue.shade700,
+                                            ),
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      Formatters.formatDate(transaction.date),
-                                    ),
-                                    if (transaction.memo != null) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        transaction.memo!,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                trailing: Text(
-                                  '${transaction.type == models.TransactionType.receivable ? '+' : '-'}'
-                                  '${Formatters.formatCurrency(transaction.amount)}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: transaction.type ==
-                                            models.TransactionType.receivable
-                                        ? Colors.green.shade700
-                                        : Colors.red.shade700,
                                   ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        Formatters.formatDate(transaction.date),
+                                      ),
+                                      if (transaction.memo != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          transaction.memo!,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  trailing: Text(
+                                    '${transaction.type == models.TransactionType.receivable ? '+' : '-'}'
+                                    '${Formatters.formatCurrency(transaction.amount)}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: transaction.type ==
+                                              models.TransactionType.receivable
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    context.push('/transactions/${transaction.id}');
+                                  },
                                 ),
-                                onTap: () {
-                                  context.push('/transactions/${transaction.id}');
-                                },
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (err, _) => Center(
+                              );
+                            },
+                            childCount: transactions.length,
+                          ),
+                        ),
+                      );
+                    },
+                    loading: () => const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (err, _) => SliverFillRemaining(
+                      child: Center(
                         child: Text('에러: $err'),
                       ),
                     ),
