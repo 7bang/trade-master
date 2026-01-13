@@ -51,3 +51,8 @@
     public <init>(android.content.Context, android.util.AttributeSet, int);
     public void set*(...);
 }
+
+# Google Play Core (deferred components - not used in this app)
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**

@@ -542,10 +542,42 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          context.go('/customers/${widget.customerId}/transactions/new');
+          _showAddTransactionMenu(context);
         },
         icon: const Icon(Icons.add),
         label: const Text('거래 추가'),
+      ),
+    );
+  }
+
+  void _showAddTransactionMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.receipt_long, color: Colors.blue),
+              title: const Text('단건 입력'),
+              subtitle: const Text('거래를 1건 입력합니다'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/customers/${widget.customerId}/transactions/new');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.library_add, color: Colors.green),
+              title: const Text('여러 건 입력'),
+              subtitle: const Text('거래를 여러 건 한번에 입력합니다'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/customers/${widget.customerId}/transactions/multi');
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

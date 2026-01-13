@@ -55,9 +55,9 @@ android {
             // Release signing configuration
             signingConfig = signingConfigs.getByName("release")
 
-            // ProGuard 규칙 추가 (코드 최적화 시 필요)
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 난독화 및 최적화 활성화
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

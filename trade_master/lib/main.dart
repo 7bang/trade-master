@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,7 @@ import 'screens/product/product_form_screen.dart';
 import 'screens/transaction/transaction_list_screen.dart';
 import 'screens/transaction/transaction_form_screen.dart';
 import 'screens/transaction/transaction_detail_screen.dart';
+import 'screens/transaction/multi_transaction_form_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/business_edit_screen.dart';
 
@@ -64,6 +66,17 @@ class _MyAppState extends ConsumerState<MyApp> {
       themeMode: ThemeMode.light, // 강제로 라이트 모드 사용
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
+      // 한글 지원
+      locale: const Locale('ko', 'KR'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
+      ],
     );
   }
 
@@ -155,6 +168,13 @@ class _MyAppState extends ConsumerState<MyApp> {
                           builder: (context, state) {
                             final customerId = state.pathParameters['id']!;
                             return TransactionFormScreen(customerId: customerId);
+                          },
+                        ),
+                        GoRoute(
+                          path: 'transactions/multi',
+                          builder: (context, state) {
+                            final customerId = state.pathParameters['id']!;
+                            return MultiTransactionFormScreen(customerId: customerId);
                           },
                         ),
                         GoRoute(

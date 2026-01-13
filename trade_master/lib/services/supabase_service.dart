@@ -230,7 +230,10 @@ class SupabaseService {
       query = query.lte('date', endDate.toIso8601String().split('T')[0]);
     }
 
-    final response = await query.order('date', ascending: false);
+    // 정렬: 1) 날짜 내림차순(최신순), 2) 생성시간 내림차순(같은 날짜 내에서 최근 생성순)
+    final response = await query
+        .order('date', ascending: false)
+        .order('created_at', ascending: false);
 
     return (response as List)
         .map((json) => Transaction.fromJson(json as Map<String, dynamic>))
