@@ -167,7 +167,10 @@ CREATE TABLE IF NOT EXISTS transactions (
   memo TEXT,
 
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  -- soft delete: NULL이면 활성, 값이 있으면 삭제된 거래
+  deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 -- 인덱스
@@ -176,6 +179,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_customer_id ON transactions(customer
 CREATE INDEX IF NOT EXISTS idx_transactions_product_id ON transactions(product_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date DESC);
 CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+CREATE INDEX IF NOT EXISTS idx_transactions_active ON transactions(customer_id, date DESC) WHERE deleted_at IS NULL;
 
 -- RLS 활성화
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
@@ -222,7 +226,8 @@ BEGIN
     )
   INTO v_balance
   FROM transactions
-  WHERE customer_id = p_customer_id;
+  WHERE customer_id = p_customer_id
+    AND deleted_at IS NULL;
 
   RETURN COALESCE(v_balance, 0);
 END;

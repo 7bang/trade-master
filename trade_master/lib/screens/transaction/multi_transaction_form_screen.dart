@@ -100,18 +100,15 @@ class _MultiTransactionFormScreenState
         throw Exception('사업장 정보를 찾을 수 없습니다');
       }
 
-      // 모든 거래를 순차적으로 저장
-      for (var i = 0; i < _transactions.length; i++) {
-        final item = _transactions[i];
-        final amount = item.calculateAmount();
-        final now = DateTime.now();
-
-        final transaction = Transaction(
+      // 모든 거래를 단일 INSERT로 저장 (원자성 보장)
+      final now = DateTime.now();
+      final transactionsList = _transactions.map((item) {
+        return Transaction(
           id: '',
           businessId: business.id,
           customerId: widget.customerId,
           type: item.selectedType,
-          amount: amount,
+          amount: item.calculateAmount(),
           date: item.selectedDate,
           productId: item.useProductMode ? item.selectedProduct?.id : null,
           quantity: item.useProductMode
@@ -126,9 +123,9 @@ class _MultiTransactionFormScreenState
           createdAt: now,
           updatedAt: now,
         );
+      }).toList();
 
-        await service.createTransaction(transaction);
-      }
+      await service.createTransactionsBatch(transactionsList);
 
       // Provider 갱신
       ref.invalidate(transactionsProvider(widget.customerId));
@@ -450,7 +447,7 @@ class _MultiTransactionFormScreenState
                     if (item.useProductMode) ...[
                       // 품목 선택
                       DropdownButtonFormField<Product>(
-                        value: item.selectedProduct,
+                        initialValue: item.selectedProduct,
                         decoration: const InputDecoration(
                           labelText: '품목',
                           hintText: '품목을 선택하세요',

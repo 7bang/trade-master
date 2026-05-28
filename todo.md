@@ -8,17 +8,14 @@
 
 ## P0 — 긴급 / 안정성 (출시 전 필수)
 
-- [ ] **[데이터] 서비스 계층 예외 처리 전무**
-  `lib/services/supabase_service.dart`(약 300줄) 전체에 try-catch가 없음. `.single()` 호출(55, 72, 107, 125, 168, 185, 249, 268행)이 행이 없거나 중복이면 `PostgrestException`을 그대로 던져 앱이 크래시한다.
-  → 쿼리를 try-catch로 감싸고, 사용자 친화적 메시지로 래핑.
+- [x] **[데이터] 서비스 계층 예외 처리 전무**
+  `lib/services/supabase_service.dart` 전 메서드에 `PostgrestException`/`AuthException` try-catch 추가. 한국어 에러 메시지로 래핑.
 
-- [ ] **[데이터] 다건 거래 저장 부분 실패**
-  `lib/screens/transaction/multi_transaction_form_screen.dart`가 거래를 루프에서 순차 저장(`createTransaction`)하며 중간 실패 시 롤백이 없음 → 일부만 저장되는 정합성 문제.
-  → 일괄 INSERT(단일 호출) 또는 RPC 트랜잭션으로 원자성 확보.
+- [x] **[데이터] 다건 거래 저장 부분 실패**
+  `createTransactionsBatch(List<Transaction>)` 신설 — 단일 INSERT로 전체를 저장해 원자성 확보. `multi_transaction_form_screen.dart`의 루프 제거 후 해당 메서드 사용.
 
-- [ ] **[데이터/정책결정] 거래는 hard delete, 거래처·품목은 soft delete**
-  `deleteTransaction`은 실제 DELETE라 복구·감사 추적이 불가. 거래처/품목은 `is_active=false`로 soft delete.
-  → `deleted_at` 기반 soft delete로 통일할지 **결정 필요**.
+- [x] **[데이터] 거래 soft delete 전환**
+  마이그레이션 `supabase/migrations/20260529000000_soft_delete_transactions.sql` 추가 (`deleted_at` 컬럼, 부분 인덱스). `deleteTransaction`을 hard DELETE → `deleted_at` 업데이트로 변경. `getTransactions`에 `.isFilter('deleted_at', null)` 추가. `get_customer_balance` RPC에 `deleted_at IS NULL` 조건 추가. `database-schema.sql` 동기화 완료.
 
 ---
 
