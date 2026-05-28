@@ -1,4 +1,4 @@
-# 거래의장인 - 통합 기술 문서 📚
+# 거래클립 - 통합 기술 문서 📚
 
 > 개발 초보자도 쉽게 따라할 수 있는 완전한 개발 가이드
 
@@ -29,7 +29,7 @@
 
 ### 1.1 프로젝트 소개
 
-**거래의장인**은 소상공인과 유통업체가 거래처와의 거래 내역을 쉽게 기록하고 관리할 수 있는 모바일 거래장 앱입니다.
+**거래클립**은 소상공인과 유통업체가 거래처와의 거래 내역을 쉽게 기록하고 관리할 수 있는 모바일 거래장 앱입니다.
 
 **핵심 가치:**
 - 📱 **간편한 거래 입력**: 10초 안에 거래 기록
@@ -604,7 +604,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: '거래의장인',
+      title: '거래클립',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       routerConfig: _router,
@@ -1354,7 +1354,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  '거래의장인',
+                  '거래클립',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -2300,7 +2300,7 @@ flutter build appbundle --release
 1. Google Play Console 접속
 2. 앱 만들기
 3. 앱 정보 입력:
-   - 앱 이름: 거래의장인
+   - 앱 이름: 거래클립
    - 설명: 거래처 관리를 쉽고 간편하게
    - 카테고리: 비즈니스
 4. 스크린샷 업로드 (최소 2개)

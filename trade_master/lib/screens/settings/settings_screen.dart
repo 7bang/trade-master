@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../providers/providers.dart';
 import '../../services/supabase_service.dart';
+
+final _packageInfoProvider = FutureProvider<PackageInfo>(
+  (ref) => PackageInfo.fromPlatform(),
+);
 
 /// 설정 화면
 class SettingsScreen extends ConsumerWidget {
@@ -97,12 +102,23 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
 
           // 앱 정보
-          const AboutListTile(
-            icon: Icon(Icons.info),
-            applicationName: '거래의장인',
-            applicationVersion: '1.0.0',
-            applicationLegalese: '© 2025 거래의장인',
-            child: Text('앱 정보'),
+          ref.watch(_packageInfoProvider).when(
+            data: (info) => AboutListTile(
+              icon: const Icon(Icons.info),
+              applicationName: '거래클립',
+              applicationVersion: info.version,
+              applicationLegalese: '© 2025 거래클립',
+              child: const Text('앱 정보'),
+            ),
+            loading: () => const ListTile(
+              leading: Icon(Icons.info),
+              title: Text('앱 정보'),
+            ),
+            error: (_, __) => const AboutListTile(
+              icon: Icon(Icons.info),
+              applicationName: '거래클립',
+              child: Text('앱 정보'),
+            ),
           ),
         ],
       ),

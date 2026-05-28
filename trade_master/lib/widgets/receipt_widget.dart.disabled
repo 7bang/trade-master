@@ -51,7 +51,7 @@ class ReceiptWidget extends StatelessWidget {
             child: Column(
               children: [
                 const Text(
-                  '거래의장인',
+                  '거래클립',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -427,7 +427,7 @@ class ReceiptWidget extends StatelessWidget {
           // 푸터
           Center(
             child: Text(
-              '거래의장인 - 소상공인을 위한 거래장 관리',
+              '거래클립 - 소상공인을 위한 거래장 관리',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
