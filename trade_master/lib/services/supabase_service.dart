@@ -105,7 +105,8 @@ class SupabaseService {
           .select()
           .eq('business_id', businessId)
           .eq('is_active', true)
-          .order('name');
+          .order('name')
+          .limit(500);
       return (response as List)
           .map((json) => Customer.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -187,7 +188,8 @@ class SupabaseService {
           .select()
           .eq('business_id', businessId)
           .eq('is_active', true)
-          .order('name');
+          .order('name')
+          .limit(500);
       return (response as List)
           .map((json) => Product.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -290,7 +292,8 @@ class SupabaseService {
 
       final response = await query
           .order('date', ascending: false)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(1000);
 
       return (response as List)
           .map((json) => Transaction.fromJson(json as Map<String, dynamic>))
@@ -396,6 +399,27 @@ class SupabaseService {
   }
 
   // ========== 잔액 ==========
+
+  /// 사업장 전체 거래처 잔액을 단일 쿼리로 조회 — N+1 방지
+  Future<Map<String, double>> getAllBalances(String businessId) async {
+    try {
+      final response = await _client.rpc(
+        'get_all_balances',
+        params: {'p_business_id': businessId},
+      );
+
+      final result = <String, double>{};
+      for (final row in response as List) {
+        result[row['customer_id'] as String] =
+            (row['balance'] as num).toDouble();
+      }
+      return result;
+    } on PostgrestException catch (e) {
+      throw Exception('잔액 일괄 조회 실패: ${e.message}');
+    } catch (_) {
+      throw Exception('잔액 조회 중 오류가 발생했습니다');
+    }
+  }
 
   Future<double> getCustomerBalance(String customerId) async {
     try {

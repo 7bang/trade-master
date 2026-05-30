@@ -21,29 +21,23 @@
 
 ## P1 — 중요 (성능 · 정확성 · 일관성)
 
-- [ ] **[성능] 잔액 조회 N+1 쿼리**
-  `lib/providers/providers.dart:54-63` `customersProvider`가 거래처마다 `getCustomerBalance`를 개별 호출(거래처 50명 = 51쿼리).
-  → RPC `get_all_balances(business_id)` 신설 또는 JOIN으로 일괄 조회.
+- [x] **[성능] 잔액 조회 N+1 쿼리**
+  `get_all_balances(p_business_id)` RPC 신설(마이그레이션 `20260531000000`). `supabase_service.dart`에 `getAllBalances()` 추가. `providers.dart`에서 거래처 목록+잔액 병렬 단일 호출로 교체.
 
-- [ ] **[성능] 페이지네이션 없음**
-  `getCustomers` / `getProducts` / `getTransactions`가 전량 로드. 데이터 증가 시 타임아웃·메모리 위험.
-  → limit/offset(또는 커서) + UI 무한스크롤.
+- [x] **[성능] 페이지네이션 — 서비스 limit 추가 (UI 무한스크롤은 Phase 2)**
+  `getCustomers`·`getProducts` `.limit(500)`, `getTransactions` `.limit(1000)` 추가해 메모리 위험 방지. UI 무한스크롤은 사용자 규모 증가 시 별도 진행.
 
-- [ ] **[데이터] 잔액 조회 실패 시 조용한 stale 반환**
-  `lib/providers/providers.dart:59,78` catch에서 원본 customer 반환(잔액 0 또는 구값). 사용자에게 오류가 표시되지 않음.
-  → 실패를 표시하거나 재시도 처리.
+- [x] **[데이터] 잔액 조회 실패 시 조용한 stale 반환**
+  `customerProvider`의 try-catch 제거 → 잔액 조회 실패 시 에러가 UI `.when(error:)` 핸들러로 전파.
 
-- [ ] **[성능] 캐싱 부재**
-  `FutureProvider`가 화면 rebuild마다 재조회.
-  → keepAlive/캐시 정책, 필요 시 로컬 캐시(Hive/Isar) 검토.
+- [x] **[성능] 캐싱 부재**
+  전체 FutureProvider / FutureProvider.family에 `ref.keepAlive()` 추가 — 화면 이탈 후에도 데이터 유지, `ref.invalidate()` 호출 시 정상 갱신.
 
-- [ ] **[데이터] 스키마 기본값 불일치**
-  `products.unit` 기본값이 `database-schema.sql`='개', 적용된 마이그레이션 `supabase/migrations/...initial_schema.sql`='ea', Dart 모델(`lib/models/product.dart`)='개'로 제각각.
-  → 세 곳을 '개'로 통일하고 마이그레이션 정합화.
+- [x] **[데이터] 스키마 기본값 불일치**
+  마이그레이션 `20260531000000`에서 `ALTER TABLE products ALTER COLUMN unit SET DEFAULT '개'` 적용. DB·Dart 모델·스키마 참조 파일 모두 '개'로 통일.
 
-- [ ] **[설정] anon key 하드코딩 + dotenv 미사용**
-  `lib/config/supabase_config.dart`에 URL/anon key 하드코딩. `flutter_dotenv`는 pubspec에 선언됐으나 미사용(`main.dart`가 직접 상수 참조).
-  ※ anon key는 공개돼도 RLS로 보호되므로 보안 취약점은 아님 — 환경 분리·일관성 목적으로 `.env` 로딩 전환 권장.
+- [x] **[설정] anon key 하드코딩 + dotenv 미사용**
+  `supabase_config.dart`를 dotenv getter로 전환. `main.dart`에 `dotenv.load()` 추가. 하드코딩 상수 제거.
 
 ---
 

@@ -9,15 +9,11 @@ import '../models/transaction.dart';
 
 // ========== 서비스 Providers ==========
 
-/// Supabase 서비스 Provider
 final supabaseServiceProvider = Provider((ref) => SupabaseService());
-
-/// 공유 서비스 Provider
 final shareServiceProvider = Provider((ref) => ShareService());
 
 // ========== 인증 Providers ==========
 
-/// 현재 사용자 Provider
 final currentUserProvider = StreamProvider<User?>((ref) {
   final service = ref.watch(supabaseServiceProvider);
   return service.authStateChanges.map((state) => state.session?.user);
@@ -25,11 +21,10 @@ final currentUserProvider = StreamProvider<User?>((ref) {
 
 // ========== 사업장 Providers ==========
 
-/// 현재 사업장 Provider
 final currentBusinessProvider = FutureProvider<Business?>((ref) async {
+  ref.keepAlive();
   final service = ref.watch(supabaseServiceProvider);
   final user = ref.watch(currentUserProvider).value;
-
   if (user == null) return null;
 
   try {
@@ -41,63 +36,51 @@ final currentBusinessProvider = FutureProvider<Business?>((ref) async {
 
 // ========== 거래처 Providers ==========
 
-/// 거래처 목록 Provider
+/// 거래처 목록 + 잔액을 단일 쿼리로 조회 (N+1 제거)
 final customersProvider = FutureProvider<List<Customer>>((ref) async {
+  ref.keepAlive();
   final service = ref.watch(supabaseServiceProvider);
   final business = await ref.watch(currentBusinessProvider.future);
-
   if (business == null) return [];
 
-  final customers = await service.getCustomers(business.id);
+  // 거래처 목록과 전체 잔액을 병렬 조회
+  final customersFuture = service.getCustomers(business.id);
+  final balancesFuture = service.getAllBalances(business.id);
 
-  // 각 거래처의 잔액을 조회하여 추가
-  final customersWithBalance = await Future.wait(
-    customers.map((customer) async {
-      try {
-        final balance = await service.getCustomerBalance(customer.id);
-        return customer.copyWith(balance: balance);
-      } catch (e) {
-        return customer;
-      }
-    }),
-  );
+  final customers = await customersFuture;
+  final balances = await balancesFuture;
 
-  return customersWithBalance;
+  return customers
+      .map((c) => c.copyWith(balance: balances[c.id] ?? 0))
+      .toList();
 });
 
-/// 특정 거래처 Provider
+/// 특정 거래처 Provider — 잔액 조회 실패 시 에러 전파 (stale 반환 제거)
 final customerProvider = FutureProvider.family<Customer, String>(
   (ref, customerId) async {
+    ref.keepAlive();
     final service = ref.watch(supabaseServiceProvider);
     final customer = await service.getCustomer(customerId);
-
-    // 잔액 조회
-    try {
-      final balance = await service.getCustomerBalance(customerId);
-      return customer.copyWith(balance: balance);
-    } catch (e) {
-      return customer;
-    }
+    final balance = await service.getCustomerBalance(customerId);
+    return customer.copyWith(balance: balance);
   },
 );
 
 // ========== 품목 Providers ==========
 
-/// 품목 목록 Provider
 final productsProvider = FutureProvider<List<Product>>((ref) async {
+  ref.keepAlive();
   final service = ref.watch(supabaseServiceProvider);
   final business = await ref.watch(currentBusinessProvider.future);
-
   if (business == null) return [];
-
-  return await service.getProducts(business.id);
+  return service.getProducts(business.id);
 });
 
-/// 특정 품목 Provider
 final productProvider = FutureProvider.family<Product, String>(
   (ref, productId) async {
+    ref.keepAlive();
     final service = ref.watch(supabaseServiceProvider);
-    return await service.getProduct(productId);
+    return service.getProduct(productId);
   },
 );
 
@@ -106,15 +89,17 @@ final productProvider = FutureProvider.family<Product, String>(
 /// 거래 목록 Provider (거래처별)
 final transactionsProvider = FutureProvider.family<List<Transaction>, String>(
   (ref, customerId) async {
+    ref.keepAlive();
     final service = ref.watch(supabaseServiceProvider);
-    return await service.getTransactions(customerId: customerId);
+    return service.getTransactions(customerId: customerId);
   },
 );
 
 /// 특정 거래 Provider
 final transactionProvider = FutureProvider.family<Transaction, String>(
   (ref, transactionId) async {
+    ref.keepAlive();
     final service = ref.watch(supabaseServiceProvider);
-    return await service.getTransaction(transactionId);
+    return service.getTransaction(transactionId);
   },
 );
