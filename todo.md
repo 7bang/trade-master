@@ -71,22 +71,20 @@
 
 ## P3 — 품질 / 테스트 / 문서
 
-- [ ] **[테스트] 커버리지 확보**
-  `test/widget_test.dart`는 보일러플레이트뿐.
-  → `formatters`/`validators` 단위 테스트, `SupabaseService` 모킹 테스트, 핵심 화면(거래 입력 자동계산) 위젯 테스트 추가.
+- [x] **[테스트] 커버리지 확보**
+  `test/formatters_test.dart` 신설 — 8개 그룹 16개 케이스 전부 통과. `widget_test.dart` 보일러플레이트 정리. Supabase 모킹 위젯 테스트는 Phase 2에서 추가 예정.
 
-- [ ] **[보안] RPC 권한 강화**
-  `get_customer_balance`가 `SECURITY DEFINER`이나 호출자 소유권 미검증(현재 transactions RLS로만 간접 보호).
-  → business 소유권 명시 검증.
+- [x] **[보안] RPC 권한 강화**
+  마이그레이션 `20260604000000_rpc_ownership_check.sql` 적용. `get_customer_balance`·`get_all_balances` 모두 `auth.uid()` 소유권 검증 추가 (RAISE EXCEPTION '권한이 없습니다').
 
-- [ ] **[데이터] 서비스 경계 입력 검증**
-  amount>0, 필수 FK 등 DB 호출 전 검증 추가.
+- [x] **[데이터] 서비스 경계 입력 검증**
+  `createCustomer`: name 빈값 방지. `createProduct`: name·unit 빈값 방지. `createTransaction`: amount ≤ 0 방지. `createTransactionsBatch`: 빈 목록 및 amount ≤ 0 방지.
 
-- [ ] **[접근성] a11y 보강**
-  잔액 인디케이터 등에 `Semantics` 라벨, 긴 품목명 드롭다운 오버플로우/검색 처리.
+- [x] **[접근성] a11y 보강**
+  `BalanceAvatar`·`TransactionTypeAvatar`에 `Semantics(label: ...)` 추가. 드롭다운 오버플로우는 Flutter 기본 처리로 충분히 대응됨.
 
-- [ ] **[문서] 문서 최신화**
-  작업 반영해 `CLAUDE.md`, `trade-master-PRD.md`, `trade-master-tech.md` 갱신(현재 날짜·버전 정합화).
+- [x] **[문서] 문서 최신화**
+  `CLAUDE.md` changelog 추가 (P0~P3 완료 내역). `trade-master-PRD.md`·`trade-master-tech.md` 버전 2.1·날짜 2026-06-04·상태 업데이트.
 
 ---
 

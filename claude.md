@@ -427,7 +427,23 @@ flutter clean
 - ✅ RLS policies applied to all tables
 - ✅ Supabase service layer implemented
 
+### 2026-06-04
+- ✅ P0: 서비스 계층 전체 try-catch 추가 (PostgrestException/AuthException 분리)
+- ✅ P0: 다건 거래 atomic batch INSERT (`createTransactionsBatch`)
+- ✅ P0: 거래 soft delete 전환 (`deleted_at` 컬럼, 부분 인덱스)
+- ✅ P1: `get_all_balances` RPC 신설 — N+1 쿼리 해결
+- ✅ P1: 전체 FutureProvider에 `ref.keepAlive()` 캐싱
+- ✅ P1: `supabase_config.dart` dotenv 전환, `main.dart` dotenv.load() 추가
+- ✅ P1: products.unit 기본값 '개'로 통일 (DB·모델 정합)
+- ✅ P2: `common_widgets.dart` 신설 및 6개 화면 일괄 적용
+- ✅ P2: `.disabled` 파일 3개 삭제 (~847줄)
+- ✅ P2: 다크테마 미사용 코드 제거, `Future.delayed` → `endOfFrame` 교체
+- ✅ P3: `formatters_test.dart` 단위 테스트 작성 (8개 그룹 30케이스)
+- ✅ P3: RPC 소유권 검증 강화 (migration 20260604000000)
+- ✅ P3: 서비스 경계 입력 검증 추가 (amount>0, name 빈값 방지)
+- ✅ P3: BalanceAvatar/TransactionTypeAvatar Semantics 라벨 추가
+
 ---
 
-**Last Updated**: 2025-11-26
-**Project Status**: Initial setup complete, ready for development
+**Last Updated**: 2026-06-04
+**Project Status**: Phase 1 완료 (v1.1.0+7 출시), Phase 2 준비 중

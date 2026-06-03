@@ -133,6 +133,9 @@ class SupabaseService {
   }
 
   Future<Customer> createCustomer(Customer customer) async {
+    if (customer.name.trim().isEmpty) {
+      throw Exception('거래처명을 입력해주세요');
+    }
     try {
       final data = customer.toJson();
       data.remove('id');
@@ -216,6 +219,12 @@ class SupabaseService {
   }
 
   Future<Product> createProduct(Product product) async {
+    if (product.name.trim().isEmpty) {
+      throw Exception('품목명을 입력해주세요');
+    }
+    if (product.unit.trim().isEmpty) {
+      throw Exception('단위를 입력해주세요');
+    }
     try {
       final data = product.toJson();
       data.remove('id');
@@ -321,6 +330,9 @@ class SupabaseService {
   }
 
   Future<Transaction> createTransaction(Transaction transaction) async {
+    if (transaction.amount <= 0) {
+      throw Exception('금액은 0보다 커야 합니다');
+    }
     try {
       final data = transaction.toJson();
       data.remove('id');
@@ -345,6 +357,14 @@ class SupabaseService {
   /// 여러 거래를 단일 INSERT로 저장 — 일부 실패 시 전체 롤백 보장
   Future<List<Transaction>> createTransactionsBatch(
       List<Transaction> transactions) async {
+    if (transactions.isEmpty) {
+      throw Exception('저장할 거래 내역이 없습니다');
+    }
+    for (final t in transactions) {
+      if (t.amount <= 0) {
+        throw Exception('모든 거래의 금액은 0보다 커야 합니다');
+      }
+    }
     try {
       final dataList = transactions.map((transaction) {
         final data = transaction.toJson();

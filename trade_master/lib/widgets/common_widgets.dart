@@ -120,12 +120,16 @@ class BalanceAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final positive = balance >= 0;
-    return CircleAvatar(
-      backgroundColor:
-          positive ? Colors.green.shade100 : Colors.red.shade100,
-      child: Icon(
-        icon,
-        color: positive ? Colors.green.shade700 : Colors.red.shade700,
+    final label = positive ? '받을 돈 있음' : '줄 돈 있음';
+    return Semantics(
+      label: label,
+      child: CircleAvatar(
+        backgroundColor:
+            positive ? Colors.green.shade100 : Colors.red.shade100,
+        child: Icon(
+          icon,
+          color: positive ? Colors.green.shade700 : Colors.red.shade700,
+        ),
       ),
     );
   }
@@ -139,12 +143,15 @@ class TransactionTypeAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CircleAvatar(
-      backgroundColor:
-          isReceivable ? Colors.green.shade100 : Colors.red.shade100,
-      child: Icon(
-        isReceivable ? Icons.arrow_downward : Icons.arrow_upward,
-        color: isReceivable ? Colors.green.shade700 : Colors.red.shade700,
+    return Semantics(
+      label: isReceivable ? '받을 돈' : '줄 돈',
+      child: CircleAvatar(
+        backgroundColor:
+            isReceivable ? Colors.green.shade100 : Colors.red.shade100,
+        child: Icon(
+          isReceivable ? Icons.arrow_downward : Icons.arrow_upward,
+          color: isReceivable ? Colors.green.shade700 : Colors.red.shade700,
+        ),
       ),
     );
   }
