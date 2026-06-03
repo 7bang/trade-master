@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/common_widgets.dart';
 
 /// 전체 거래내역 Provider (날짜 필터 지원)
 final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
@@ -79,17 +80,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                 itemBuilder: (context, index) {
                   final customer = customers[index];
                   return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: customer.balance >= 0
-                          ? Colors.green.shade100
-                          : Colors.red.shade100,
-                      child: Icon(
-                        Icons.person,
-                        color: customer.balance >= 0
-                            ? Colors.green.shade700
-                            : Colors.red.shade700,
-                      ),
-                    ),
+                    leading: BalanceAvatar(balance: customer.balance),
                     title: Text(customer.name),
                     subtitle: customer.phone != null ? Text(customer.phone!) : null,
                     onTap: () {
@@ -146,34 +137,10 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       body: transactionsAsync.when(
         data: (transactions) {
           if (transactions.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long,
-                    size: 80,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '거래 내역이 없습니다',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '거래처 상세에서 거래를 추가해주세요',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
+            return EmptyStateView(
+              icon: Icons.receipt_long,
+              title: '거래 내역이 없습니다',
+              subtitle: '거래처 상세에서 거래를 추가해주세요',
             );
           }
 
@@ -218,18 +185,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                   // 거래 목록
                   ...dayTransactions.map((transaction) {
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: transaction.type == TransactionType.receivable
-                            ? Colors.green.shade100
-                            : Colors.red.shade100,
-                        child: Icon(
-                          transaction.type == TransactionType.receivable
-                              ? Icons.add
-                              : Icons.remove,
-                          color: transaction.type == TransactionType.receivable
-                              ? Colors.green.shade700
-                              : Colors.red.shade700,
-                        ),
+                      leading: TransactionTypeAvatar(
+                        isReceivable: transaction.type == TransactionType.receivable,
                       ),
                       title: Text(
                         transaction.customer?.name ?? '거래처 정보 없음',
@@ -270,9 +227,10 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('오류가 발생했습니다: $error'),
+        loading: () => const LoadingView(),
+        error: (error, stack) => ErrorView(
+          error: error,
+          onRetry: () => ref.refresh(allTransactionsProvider(_dateFilter)),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

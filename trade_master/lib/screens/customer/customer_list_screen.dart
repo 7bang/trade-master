@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/common_widgets.dart';
 
 /// 거래처 목록 화면
 class CustomerListScreen extends ConsumerStatefulWidget {
@@ -57,46 +58,13 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   return nameMatch || phoneMatch;
                 }).toList();
           if (customers.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
-                    size: 80,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _searchQuery.isEmpty
-                        ? '등록된 거래처가 없습니다'
-                        : '검색 결과가 없습니다',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (_searchQuery.isEmpty)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        context.push('/customers/new');
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('거래처 추가하기'),
-                    )
-                  else
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _searchQuery = '';
-                        });
-                      },
-                      icon: const Icon(Icons.clear),
-                      label: const Text('검색 초기화'),
-                    ),
-                ],
-              ),
+            return EmptyStateView(
+              icon: _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
+              title: _searchQuery.isEmpty ? '등록된 거래처가 없습니다' : '검색 결과가 없습니다',
+              actionLabel: _searchQuery.isEmpty ? '거래처 추가하기' : '검색 초기화',
+              onAction: _searchQuery.isEmpty
+                  ? () => context.push('/customers/new')
+                  : () => setState(() => _searchQuery = ''),
             );
           }
 
@@ -208,17 +176,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: customer.balance >= 0
-                              ? Colors.green.shade100
-                              : Colors.red.shade100,
-                          child: Icon(
-                            Icons.person,
-                            color: customer.balance >= 0
-                                ? Colors.green.shade700
-                                : Colors.red.shade700,
-                          ),
-                        ),
+                        leading: BalanceAvatar(balance: customer.balance),
                         title: Text(
                           customer.name,
                           style: const TextStyle(
@@ -268,35 +226,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '에러가 발생했습니다',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                err.toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => ref.refresh(customersProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('다시 시도'),
-              ),
-            ],
-          ),
+        loading: () => const LoadingView(),
+        error: (err, stack) => ErrorView(
+          error: err,
+          onRetry: () => ref.refresh(customersProvider),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

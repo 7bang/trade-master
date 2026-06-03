@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/product.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/common_widgets.dart';
 
 /// 품목 목록 화면
 class ProductListScreen extends ConsumerWidget {
@@ -21,42 +22,12 @@ class ProductListScreen extends ConsumerWidget {
       body: productsAsync.when(
         data: (products) {
           if (products.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inventory_2,
-                    size: 80,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '등록된 품목이 없습니다',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '자주 거래하는 품목을 등록하면\n거래 입력이 훨씬 빨라집니다',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.go('/products/new');
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('품목 추가하기'),
-                  ),
-                ],
-              ),
+            return EmptyStateView(
+              icon: Icons.inventory_2,
+              title: '등록된 품목이 없습니다',
+              subtitle: '자주 거래하는 품목을 등록하면\n거래 입력이 훨씬 빨라집니다',
+              actionLabel: '품목 추가하기',
+              onAction: () => context.go('/products/new'),
             );
           }
 
@@ -252,35 +223,10 @@ class ProductListScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '에러가 발생했습니다',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                err.toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => ref.refresh(productsProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('다시 시도'),
-              ),
-            ],
-          ),
+        loading: () => const LoadingView(),
+        error: (err, stack) => ErrorView(
+          error: err,
+          onRetry: () => ref.refresh(productsProvider),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

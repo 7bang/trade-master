@@ -59,8 +59,8 @@ class _MultiTransactionFormScreenState
       }
     });
 
-    // Form이 빌드될 때까지 약간 대기
-    await Future.delayed(const Duration(milliseconds: 150));
+    // setState 후 다음 프레임까지 대기 — Form 빌드 완료 보장
+    await WidgetsBinding.instance.endOfFrame;
 
     // 모든 항목 검증
     bool allValid = true;

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/transaction_receipt_widget.dart';
 
 /// 거래 상세 화면
@@ -477,30 +478,8 @@ class _TransactionDetailScreenState
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '에러가 발생했습니다',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                err.toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-        ),
+        loading: () => const LoadingView(),
+        error: (err, stack) => ErrorView(error: err),
       ),
     );
   }

@@ -47,25 +47,25 @@
   `customer_detail_screen.dart`(640), `multi_transaction_form_screen.dart`(636), `transaction_form_screen.dart`(598), `transaction_detail_screen.dart`(540), `product_form_screen.dart`(481).
   → 폼 필드/섹션을 하위 위젯으로 추출.
 
-- [ ] **[UI] 중복 UI 컴포넌트 추출**
-  `CustomerSelectionDialog`, `BalanceIndicator`(잔액 색/아이콘), `EmptyStateView`, `ErrorView`, `LoadingView`가 여러 화면에 복붙돼 있음.
-  → 공통 위젯으로 추출.
+- [x] **[UI] 중복 UI 컴포넌트 추출**
+  `LoadingView`, `ErrorView`, `EmptyStateView`, `BalanceAvatar`, `TransactionTypeAvatar`를 `lib/widgets/common_widgets.dart`로 추출. 6개 화면 전체 적용 완료.
 
-- [ ] **[정리] 죽은 코드 삭제**
-  `lib/services/share_service.dart.disabled`, `lib/utils/share_utils.dart.disabled`, `lib/widgets/receipt_widget.dart.disabled`(합계 약 847줄). git 히스토리로 대체 가능.
-  → 제거.
+- [x] **[정리] 죽은 코드 삭제**
+  `lib/services/share_service.dart.disabled`, `lib/utils/share_utils.dart.disabled`, `lib/widgets/receipt_widget.dart.disabled` 삭제 완료.
 
-- [ ] **[UI] 다크테마 정리**
-  `lib/config/app_theme.dart`에 다크테마가 정의됐으나 `lib/main.dart:66`에서 `ThemeMode.light` 강제.
-  → 완성하거나 미사용 코드 제거.
+- [x] **[UI] 다크테마 정리**
+  `app_theme.dart`의 미사용 `darkTheme` getter 제거. `main.dart`의 `ThemeMode.light` 강제 코드 제거.
 
 - [ ] **[UI] 하드코딩 문자열 중앙화**
   전 화면에 한국어 문자열이 인라인.
-  → `strings.dart` 또는 `intl`/.arb로 분리(향후 다국어 대비).
+  → `strings.dart` 또는 `intl`/.arb로 분리(향후 다국어 대비). *(규모가 크므로 Phase 2와 함께 진행 권장)*
 
-- [ ] **[UI] 타이밍 의존 코드 제거**
-  `multi_transaction_form_screen.dart`의 `Future.delayed(150ms)`(Form 빌드 대기)는 취약한 타이밍 의존 코드.
-  → 명시적 상태/검증으로 대체.
+- [x] **[UI] 타이밍 의존 코드 제거**
+  `multi_transaction_form_screen.dart`의 `Future.delayed(150ms)` → `WidgetsBinding.instance.endOfFrame`으로 교체.
+
+- [ ] **[UI] 대형 화면 파일 분해**
+  `customer_detail_screen.dart`(640), `multi_transaction_form_screen.dart`(636), `transaction_form_screen.dart`(598), `transaction_detail_screen.dart`(540), `product_form_screen.dart`(481).
+  → 폼 필드/섹션을 하위 위젯으로 추출. *(규모가 크므로 필요 시 개별 진행 권장)*
 
 ---
 

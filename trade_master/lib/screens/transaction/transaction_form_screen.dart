@@ -6,6 +6,7 @@ import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../models/product.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/common_widgets.dart';
 
 /// 거래 입력/수정 화면
 class TransactionFormScreen extends ConsumerStatefulWidget {
@@ -364,7 +365,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       productsAsync.when(
                         data: (products) {
                           return DropdownButtonFormField<Product>(
-                            value: _selectedProduct,
+                            initialValue: _selectedProduct,
                             decoration: const InputDecoration(
                               labelText: '품목',
                               prefixIcon: Icon(Icons.inventory_2),
@@ -588,10 +589,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Text('에러: ${err.toString()}'),
-        ),
+        loading: () => const LoadingView(),
+        error: (err, stack) => ErrorView(error: err),
       ),
     );
   }

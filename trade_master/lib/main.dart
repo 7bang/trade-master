@@ -67,7 +67,6 @@ class _MyAppState extends ConsumerState<MyApp> {
     return MaterialApp.router(
       title: '거래클립',
       theme: AppTheme.lightTheme,
-      themeMode: ThemeMode.light, // 강제로 라이트 모드 사용
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
       // 한글 지원

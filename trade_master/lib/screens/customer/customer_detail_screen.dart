@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
 import '../../models/transaction.dart' as models;
+import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/customer_statement_widget.dart';
 
 /// 거래처 상세 화면
@@ -341,34 +342,12 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                     data: (transactions) {
                       if (transactions.isEmpty) {
                         return SliverFillRemaining(
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.receipt_long,
-                                  size: 64,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  '거래 내역이 없습니다',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    context.go(
-                                        '/customers/${widget.customerId}/transactions/new');
-                                  },
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('거래 추가하기'),
-                                ),
-                              ],
-                            ),
+                          child: EmptyStateView(
+                            icon: Icons.receipt_long,
+                            title: '거래 내역이 없습니다',
+                            actionLabel: '거래 추가하기',
+                            onAction: () => context.go(
+                                '/customers/${widget.customerId}/transactions/new'),
                           ),
                         );
                       }
@@ -382,21 +361,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: transaction.type ==
-                                            models.TransactionType.receivable
-                                        ? Colors.green.shade100
-                                        : Colors.red.shade100,
-                                    child: Icon(
-                                      transaction.type ==
-                                              models.TransactionType.receivable
-                                          ? Icons.arrow_downward
-                                          : Icons.arrow_upward,
-                                      color: transaction.type ==
-                                              models.TransactionType.receivable
-                                          ? Colors.green.shade700
-                                          : Colors.red.shade700,
-                                    ),
+                                  leading: TransactionTypeAvatar(
+                                    isReceivable: transaction.type ==
+                                        models.TransactionType.receivable,
                                   ),
                                   title: Row(
                                     children: [
@@ -474,7 +441,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       );
                     },
                     loading: () => const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
+                      child: LoadingView(),
                     ),
                     error: (err, _) => SliverFillRemaining(
                       child: Center(
