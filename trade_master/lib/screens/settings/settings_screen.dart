@@ -7,7 +7,7 @@ import '../../providers/providers.dart';
 import '../../services/supabase_service.dart';
 
 // 카카오 오픈채팅 문의 링크 — 실제 링크로 교체 필요
-const _kakaoOpenChatUrl = 'https://open.kakao.com/o/PLACEHOLDER';
+const _kakaoOpenChatUrl = 'https://open.kakao.com/o/gRjICFyi';
 
 Future<void> _launchKakaoChat(BuildContext context) async {
   final uri = Uri.parse(_kakaoOpenChatUrl);
