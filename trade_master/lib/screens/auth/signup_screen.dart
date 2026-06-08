@@ -33,17 +33,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // 비밀번호 확인
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('비밀번호가 일치하지 않습니다'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
@@ -61,7 +50,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('회원가입 실패: ${e.toString()}'),
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );

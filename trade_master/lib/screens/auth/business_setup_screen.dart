@@ -75,7 +75,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('저장 실패: ${e.toString()}'),
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );

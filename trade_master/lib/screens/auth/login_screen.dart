@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그인 실패: ${e.toString()}'),
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );
@@ -166,41 +166,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text('계정이 없으신가요? 회원가입'),
                   ),
 
-                  const SizedBox(height: 48),
-
-                  // 데모 계정 안내
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.info_outline,
-                                size: 20, color: Colors.blue.shade700),
-                            const SizedBox(width: 8),
-                            Text(
-                              '데모 계정',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '테스트를 위해 먼저 Supabase에서\n사용자를 생성해주세요.',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
