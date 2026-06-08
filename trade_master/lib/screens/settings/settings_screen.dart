@@ -2,8 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/providers.dart';
 import '../../services/supabase_service.dart';
+
+// 카카오 오픈채팅 문의 링크 — 실제 링크로 교체 필요
+const _kakaoOpenChatUrl = 'https://open.kakao.com/o/PLACEHOLDER';
+
+Future<void> _launchKakaoChat(BuildContext context) async {
+  final uri = Uri.parse(_kakaoOpenChatUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } else {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('카카오톡을 열 수 없습니다')),
+      );
+    }
+  }
+}
 
 final _packageInfoProvider = FutureProvider<PackageInfo>(
   (ref) => PackageInfo.fromPlatform(),
@@ -61,6 +78,19 @@ class SettingsScreen extends ConsumerWidget {
               title: Text('로딩 중...'),
             ),
             error: (_, __) => const SizedBox.shrink(),
+          ),
+          const Divider(),
+
+          // 개발자 문의
+          ListTile(
+            leading: const Icon(
+              Icons.chat_bubble_outline,
+              color: Color(0xFFFAE100),
+            ),
+            title: const Text('개발자에게 문의'),
+            subtitle: const Text('카카오 오픈채팅으로 연결됩니다'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _launchKakaoChat(context),
           ),
           const Divider(),
 
