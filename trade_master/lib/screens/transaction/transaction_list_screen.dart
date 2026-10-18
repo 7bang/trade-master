@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
+import '../ai/insight_screen.dart';
 
 /// 전체 거래내역 Provider (날짜 필터 지원)
 final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
@@ -125,6 +126,15 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         title: const Text('거래 내역'),
         automaticallyImplyLeading: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'AI 경영 인사이트',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const InsightScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             tooltip: '기간 필터',

@@ -7,16 +7,19 @@ import '../../models/transaction.dart';
 import '../../models/product.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/ai_service.dart';
 
 /// 거래 입력/수정 화면
 class TransactionFormScreen extends ConsumerStatefulWidget {
   final String customerId;
   final String? transactionId; // null이면 등록, 값이 있으면 수정
+  final ParsedTransaction? initialData; // AI 파싱 결과 프리필
 
   const TransactionFormScreen({
     super.key,
     required this.customerId,
     this.transactionId,
+    this.initialData,
   });
 
   @override
@@ -46,7 +49,18 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     _isEdit = widget.transactionId != null;
     if (_isEdit) {
       _loadTransaction();
+    } else if (widget.initialData != null) {
+      _applyInitialData(widget.initialData!);
     }
+  }
+
+  void _applyInitialData(ParsedTransaction data) {
+    _selectedType = data.type == 'payable'
+        ? TransactionType.payable
+        : TransactionType.receivable;
+    _selectedDate = data.date;
+    _amountController.text = data.amount.toInt().toString();
+    if (data.memo != null) _memoController.text = data.memo!;
   }
 
   Future<void> _loadTransaction() async {

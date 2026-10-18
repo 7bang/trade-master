@@ -6,6 +6,9 @@ import '../../utils/formatters.dart';
 import '../../models/transaction.dart' as models;
 import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/customer_statement_widget.dart';
+import '../../widgets/ai/collection_message_sheet.dart';
+import '../ai/ai_transaction_input_screen.dart';
+import '../ai/document_generator_screen.dart';
 
 /// 거래처 상세 화면
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -145,6 +148,47 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       appBar: AppBar(
         title: const Text('거래처 상세'),
         actions: [
+          customerAsync.whenOrNull(
+                data: (customer) => PopupMenuButton<String>(
+                  icon: const Icon(Icons.auto_awesome),
+                  tooltip: 'AI 도구',
+                  onSelected: (value) {
+                    if (value == 'collection') {
+                      showCollectionMessageSheet(context, ref, customer);
+                    } else if (value == 'document') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              DocumentGeneratorScreen(customer: customer),
+                        ),
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'collection',
+                      child: Row(
+                        children: [
+                          Icon(Icons.message_outlined),
+                          SizedBox(width: 8),
+                          Text('미수금 독촉 문구'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'document',
+                      child: Row(
+                        children: [
+                          Icon(Icons.description_outlined),
+                          SizedBox(width: 8),
+                          Text('견적서/납품서 생성'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ) ??
+              const SizedBox.shrink(),
           customerAsync.whenOrNull(
                 data: (customer) => IconButton(
                   icon: const Icon(Icons.share),
@@ -540,6 +584,21 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
               onTap: () {
                 Navigator.pop(context);
                 context.go('/customers/${widget.customerId}/transactions/multi');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome, color: Colors.deepPurple),
+              title: const Text('AI 자동 입력'),
+              subtitle: const Text('자연어 또는 사진으로 자동 입력합니다'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => AiTransactionInputScreen(
+                      customerId: widget.customerId,
+                    ),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 8),
