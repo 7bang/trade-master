@@ -8,7 +8,6 @@ const VISION_MODEL = "claude-sonnet-5-5";
 
 const MAX_TEXT_LENGTH = 500;
 const MAX_IMAGE_BASE64_LENGTH = 7_000_000; // ~5MB decoded (API limit per image)
-const MAX_DOC_ITEMS = 50;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 const anthropic = new Anthropic({
@@ -249,72 +248,26 @@ async function collectionMessage(input: Record<string, unknown>) {
   const customerName = str(input.customerName, "거래처명", 100);
   const balance = num(input.balance, "미수금액");
   if (balance <= 0) throw new HttpError(400, "받을 미수금이 없는 거래처입니다.");
+  const businessName = str(input.businessName, "사업장명", 100);
+  const businessPhone = typeof input.businessPhone === "string"
+    ? input.businessPhone.trim().slice(0, 30)
+    : "";
+  const signature = businessPhone ? `${businessName} (${businessPhone})` : businessName;
 
   const text = await callClaude({
     model: TEXT_MODEL,
     content: `소상공인이 거래처에게 보낼 미수금 입금 요청 메시지를 작성해주세요.
 카카오톡으로 보내기 좋은 짧고 정중한 톤으로, 메시지 본문만 응답하세요.
 
+보내는 사업장: ${businessName}
 거래처명: ${customerName}
 미수금액: ${won(balance)}원
 
 조건:
 - 2-4문장 이내
 - 정중하지만 명확하게 입금 요청
-- 사업주 서명란은 "[사업장명]"으로 표기`,
-  });
-  return { text };
-}
-
-async function document(input: Record<string, unknown>) {
-  const docType = input.documentType === "quote" ? "견적서" : "납품서";
-  const businessName = str(input.businessName, "사업장명", 100);
-  const customerName = str(input.customerName, "거래처명", 100);
-  if (!Array.isArray(input.items) || input.items.length === 0) {
-    throw new HttpError(400, "품목을 1개 이상 입력해주세요.");
-  }
-  if (input.items.length > MAX_DOC_ITEMS) {
-    throw new HttpError(400, `품목은 최대 ${MAX_DOC_ITEMS}개까지 입력할 수 있습니다.`);
-  }
-
-  let total = 0;
-  const lines = input.items.map((raw: Record<string, unknown>) => {
-    const name = str(raw.name, "품목명", 100);
-    const quantity = num(raw.quantity, "수량");
-    const unitPrice = num(raw.unitPrice, "단가");
-    const unit = typeof raw.unit === "string" && raw.unit ? raw.unit.slice(0, 10) : "개";
-    const subtotal = quantity * unitPrice;
-    total += subtotal;
-    return `- ${name}: ${quantity}${unit} × ${won(unitPrice)}원 = ${won(subtotal)}원`;
-  });
-
-  const issued = new Date().toLocaleDateString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const text = await callClaude({
-    model: TEXT_MODEL,
-    content: `아래 정보로 ${docType} 텍스트를 작성해주세요.
-깔끔하고 읽기 좋은 형식으로, 문서 텍스트만 응답하세요.
-
-발행일: ${issued}
-공급자(사업장): ${businessName}
-수신자(거래처): ${customerName}
-
-품목:
-${lines.join("\n")}
-
-합계: ${won(total)}원
-
-형식 요건:
-- 제목: "${docType}"
-- 발행일·공급자·수신자 표시
-- 품목 표 형태 (텍스트)
-- 합계 금액 강조
-- 하단에 "위와 같이 ${docType} 드립니다." 문구`,
+- 마지막 줄 서명은 정확히 "${signature} 드림"
+- [사업장명] 같은 대괄호 자리표시자는 쓰지 말 것`,
   });
   return { text };
 }
@@ -324,7 +277,6 @@ const tasks: Record<string, (input: Record<string, unknown>) => Promise<unknown>
   parse_image: parseImage,
   insights,
   collection_message: collectionMessage,
-  document,
 };
 
 // ── Entry ─────────────────────────────────────────────────────────────────

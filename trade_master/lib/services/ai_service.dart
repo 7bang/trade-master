@@ -152,28 +152,16 @@ class AiService {
 
   Future<String> generateCollectionMessage(
     Customer customer,
-    double balance,
-  ) async {
+    double balance, {
+    required String businessName,
+    String? businessPhone,
+  }) async {
     final result = await _invoke('collection_message', {
       'customerName': customer.name,
       'balance': balance,
-    });
-    return _text(result);
-  }
-
-  // ── 5. 견적서/납품서 자동 생성 ───────────────────────────────────────────
-
-  Future<String> generateDocument(
-    String documentType,
-    String businessName,
-    String customerName,
-    List<Map<String, dynamic>> items,
-  ) async {
-    final result = await _invoke('document', {
-      'documentType': documentType,
       'businessName': businessName,
-      'customerName': customerName,
-      'items': items,
+      if (businessPhone != null && businessPhone.trim().isNotEmpty)
+        'businessPhone': businessPhone.trim(),
     });
     return _text(result);
   }

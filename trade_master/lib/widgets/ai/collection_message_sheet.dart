@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/customer.dart';
+import '../../providers/providers.dart';
 import '../../providers/ai_providers.dart';
 import '../../utils/formatters.dart';
 
@@ -55,10 +56,14 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
       _error = null;
     });
     try {
+      final business =
+          await widget.ref.read(currentBusinessProvider.future);
       final ai = widget.ref.read(aiServiceProvider);
       final msg = await ai.generateCollectionMessage(
         widget.customer,
         widget.customer.balance,
+        businessName: business?.name ?? '사업장',
+        businessPhone: business?.phone,
       );
       if (mounted) {
         setState(() {

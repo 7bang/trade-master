@@ -6,9 +6,10 @@ import '../../utils/formatters.dart';
 import '../../models/transaction.dart' as models;
 import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/customer_statement_widget.dart';
+import '../../widgets/receipts/trade_document_widget.dart';
 import '../../widgets/ai/collection_message_sheet.dart';
 import '../ai/ai_transaction_input_screen.dart';
-import '../ai/document_generator_screen.dart';
+import '../document/trade_document_screen.dart';
 
 /// 거래처 상세 화면
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -155,13 +156,6 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   onSelected: (value) {
                     if (value == 'collection') {
                       showCollectionMessageSheet(context, ref, customer);
-                    } else if (value == 'document') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              DocumentGeneratorScreen(customer: customer),
-                        ),
-                      );
                     }
                   },
                   itemBuilder: (context) => [
@@ -175,25 +169,62 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
-                      value: 'document',
-                      child: Row(
-                        children: [
-                          Icon(Icons.description_outlined),
-                          SizedBox(width: 8),
-                          Text('견적서/납품서 생성'),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ) ??
               const SizedBox.shrink(),
           customerAsync.whenOrNull(
-                data: (customer) => IconButton(
+                data: (customer) => PopupMenuButton<String>(
                   icon: const Icon(Icons.share),
-                  tooltip: '내역서 공유',
-                  onPressed: _shareStatement,
+                  tooltip: '공유',
+                  onSelected: (value) {
+                    if (value == 'statement') {
+                      _shareStatement();
+                      return;
+                    }
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => TradeDocumentScreen(
+                          customer: customer,
+                          type: value == 'quote'
+                              ? TradeDocumentType.quote
+                              : TradeDocumentType.delivery,
+                        ),
+                      ),
+                    );
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'statement',
+                      child: Row(
+                        children: [
+                          Icon(Icons.receipt_long_outlined),
+                          SizedBox(width: 8),
+                          Text('내역서 공유'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'quote',
+                      child: Row(
+                        children: [
+                          Icon(Icons.request_quote_outlined),
+                          SizedBox(width: 8),
+                          Text('견적서 생성'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delivery',
+                      child: Row(
+                        children: [
+                          Icon(Icons.local_shipping_outlined),
+                          SizedBox(width: 8),
+                          Text('납품서 생성'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ) ??
               const SizedBox.shrink(),
