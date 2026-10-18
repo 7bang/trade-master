@@ -73,7 +73,8 @@ Edge Function task: `parse_text`, `parse_image`, `insights`, `collection_message
 
 ## 남은 작업
 
-- [ ] Edge Function 배포
+- [x] Edge Function 배포 (2026-10-18, `ai` v1 ACTIVE, verify_jwt=true)
+  - [x] anon 키만으로 호출 시 401 차단 확인
   ```bash
   supabase secrets set --env-file supabase/functions/.env
   supabase functions deploy ai
