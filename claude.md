@@ -162,7 +162,6 @@ class SupabaseConfig {
 | `parse_image` | 영수증/메모 사진 → 거래 정보 (JSON) | `claude-sonnet-5-5` |
 | `insights` | 경영 인사이트 (JSON) | `claude-haiku-5-5` |
 | `collection_message` | 미수금 독촉 문구 | `claude-haiku-5-5` |
-| `document` | 견적서/납품서 텍스트 | `claude-haiku-5-5` |
 
 ### 3. Deploy
 ```bash
@@ -482,11 +481,13 @@ flutter clean
 
 ### 2026-10-18
 - ✅ 앱 이름 변경: 거래클립 → AI거래장인 (Flutter, Android, iOS)
-- ✅ AI 기능 5가지: 자연어 거래 입력, 사진 거래 입력, 경영 인사이트, 미수금 독촉 문구, 견적서/납품서
+- ✅ AI 기능 4가지: 자연어 거래 입력, 사진 거래 입력, 경영 인사이트, 미수금 독촉 문구(사업장명·연락처 서명)
 - ✅ Edge Function `ai` 신설 — Claude API 키를 서버에만 보관, 로그인 사용자 확인, 입력 제한
 - ✅ iOS 카메라·사진 권한 문구 추가, 이미지 형식 자동 감지
 - ✅ AI 응답 structured outputs + 앱측 검증, 오류 메시지 한국어화
-- ⏳ Edge Function 배포 및 실기기 테스트 대기 (`todo-AI.md` 참고)
+- ✅ 견적서/납품서 이미지 생성 (AI 미사용, `TradeDocumentWidget`) — 거래처 상세 공유 메뉴에 내역서/견적서/납품서
+- ✅ 웹(Chrome)에서 이미지 공유 실패 수정 (`ShareService` 웹은 `XFile.fromData`)
+- ✅ Edge Function 배포, Chrome 테스트 완료 / ⏳ Android 실기기 테스트 대기 (`todo-AI.md` 참고)
 
 ---
 

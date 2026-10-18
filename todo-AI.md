@@ -14,7 +14,8 @@ Claude API 키가 앱에 포함되지 않도록 **Supabase Edge Function(`ai`)�
 - [x] 2. **AI 경영 인사이트** — 거래 데이터 분석 → 매출 추이·위험 거래처 리포트
 - [x] 3. **영수증·메모 사진 → 거래 자동 입력** — 카메라/갤러리 이미지 → Claude Vision → 거래 폼
 - [x] 4. **AI 미수금 독촉 문구 생성** — 거래처 잔액 → 카카오 발송용 메시지
-- [x] 5. **견적서/납품서 자동 생성** — 품목·수량·금액 입력 → 포맷된 문서 텍스트
+- [x] 5. **견적서/납품서 생성** — 품목·수량·단가 입력 → 이미지로 공유
+  - AI 텍스트 생성에서 **앱 직접 렌더링(AI 미사용)**으로 변경 — 금액 정확성·속도·비용·일관된 양식
 
 ---
 
@@ -33,10 +34,11 @@ Claude API 키가 앱에 포함되지 않도록 **Supabase Edge Function(`ai`)�
 | `lib/providers/ai_providers.dart` | Riverpod Provider |
 | `lib/screens/ai/ai_transaction_input_screen.dart` | 자연어/사진 입력 화면 |
 | `lib/screens/ai/insight_screen.dart` | AI 경영 인사이트 화면 |
-| `lib/screens/ai/document_generator_screen.dart` | 견적서/납품서 생성 화면 |
+| `lib/screens/document/trade_document_screen.dart` | 견적서/납품서 작성 → 미리보기 → 이미지 공유 |
+| `lib/widgets/receipts/trade_document_widget.dart` | 견적서/납품서 이미지 양식 (ReceiptStyles 공유) |
 | `lib/widgets/ai/collection_message_sheet.dart` | 미수금 독촉 문구 BottomSheet |
 
-Edge Function task: `parse_text`, `parse_image`, `insights`, `collection_message`, `document`
+Edge Function task: `parse_text`, `parse_image`, `insights`, `collection_message`
 
 ### 모델
 - 텍스트: `claude-haiku-5-5` (effort `low`)
@@ -44,7 +46,8 @@ Edge Function task: `parse_text`, `parse_image`, `insights`, `collection_message
 - JSON이 필요한 작업(거래 파싱, 인사이트)은 structured outputs(`output_config.format`)로 형식 보장
 
 ### 진입점
-- 거래처 상세 AppBar ✨ 메뉴 → 미수금 독촉 문구 / 견적서·납품서
+- 거래처 상세 AppBar ✨ 메뉴 → 미수금 독촉 문구
+- 거래처 상세 AppBar 공유 메뉴 → 내역서 공유 / 견적서 생성 / 납품서 생성
 - 거래처 상세 거래 추가 시트 → AI 자동 입력
 - 거래 내역 AppBar ✨ → AI 경영 인사이트
 - `TransactionFormScreen(initialData:)` — AI 파싱 결과 프리필
@@ -79,11 +82,12 @@ Edge Function task: `parse_text`, `parse_image`, `insights`, `collection_message
   supabase secrets set --env-file supabase/functions/.env
   supabase functions deploy ai
   ```
-- [ ] 실기기에서 AI 기능 5가지 호출 테스트
-  - [ ] 자연어 입력 → 거래 폼 프리필
-  - [ ] 사진(카메라·갤러리) → 거래 폼 프리필
-  - [ ] 미수금 독촉 문구 생성 → 공유
-  - [ ] 견적서/납품서 생성
-  - [ ] 경영 인사이트
+- [x] Chrome(웹) 테스트 (2026-10-18)
+  - [x] 자연어 입력 → 거래 폼 프리필
+  - [x] 사진(갤러리) → 거래 폼 프리필
+  - [x] 미수금 독촉 문구 (사업장명·연락처 서명)
+  - [x] 경영 인사이트
+  - [x] 견적서/납품서 이미지 생성·공유, 내역서 공유
+- [ ] 실기기(Android) 테스트 — 카메라 촬영, 공유 시트(카카오톡)
 - [ ] Android/iOS 설치 후 홈화면 아이콘 레이블 확인
 - [ ] (선택) 사용자별 일일 AI 호출 횟수 제한 — 비용 보호
