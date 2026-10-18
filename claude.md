@@ -172,8 +172,11 @@ supabase secrets set --env-file supabase/functions/.env
 # 함수 배포 (운영 프로젝트에 즉시 반영됨)
 supabase functions deploy ai
 
-# 로그 확인
-supabase functions logs ai
+# 등록된 secret 확인 (값 대신 digest 표시)
+supabase secrets list
+
+# 로그 확인 (CLI에는 logs 명령 없음) → 대시보드
+# https://supabase.com/dashboard/project/eloztkamiaemnscndlqb/functions/ai/logs
 ```
 
 ---
