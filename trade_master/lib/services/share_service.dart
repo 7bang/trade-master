@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui' as ui;
@@ -30,6 +31,13 @@ class ShareService {
       final imageBytes = await _captureWidget(widgetKey);
       if (imageBytes == null) {
         return false;
+      }
+
+      // 웹: 임시 폴더가 없으므로 메모리 데이터로 공유
+      // (브라우저가 파일 공유를 지원하지 않으면 share_plus가 다운로드로 대체)
+      if (kIsWeb) {
+        await Share.shareXFiles([_webXFile(imageBytes, fileName)], text: text);
+        return true;
       }
 
       // 임시 파일로 저장
@@ -78,6 +86,12 @@ class ShareService {
     }
   }
 
+  XFile _webXFile(Uint8List bytes, String fileName) => XFile.fromData(
+        bytes,
+        name: '$fileName.png',
+        mimeType: 'image/png',
+      );
+
   /// 임시 파일로 저장
   Future<File> _saveToTempFile(Uint8List bytes, String fileName) async {
     // 임시 디렉토리 가져오기
@@ -108,8 +122,12 @@ class ShareService {
       for (int i = 0; i < widgetKeys.length; i++) {
         final imageBytes = await _captureWidget(widgetKeys[i]);
         if (imageBytes != null) {
-          final file = await _saveToTempFile(imageBytes, fileNames[i]);
-          files.add(XFile(file.path));
+          if (kIsWeb) {
+            files.add(_webXFile(imageBytes, fileNames[i]));
+          } else {
+            final file = await _saveToTempFile(imageBytes, fileNames[i]);
+            files.add(XFile(file.path));
+          }
         }
       }
 
@@ -118,6 +136,7 @@ class ShareService {
       }
 
       await Share.shareXFiles(files, text: text);
+      if (kIsWeb) return true;
 
       // 공유 후 임시 파일 삭제
       Future.delayed(const Duration(seconds: 5), () {
