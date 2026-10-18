@@ -12,3 +12,6 @@ trade_master/build/
 trade_master/android/key.properties
 trade_master/android/*.jks
 trade_master/android/*.keystore
+
+# Supabase Edge Function secrets (deploy with: supabase secrets set --env-file supabase/functions/.env)
+supabase/functions/.env
