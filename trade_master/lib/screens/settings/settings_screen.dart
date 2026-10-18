@@ -135,9 +135,9 @@ class SettingsScreen extends ConsumerWidget {
           ref.watch(_packageInfoProvider).when(
             data: (info) => AboutListTile(
               icon: const Icon(Icons.info),
-              applicationName: '거래클립',
+              applicationName: 'AI거래장인',
               applicationVersion: info.version,
-              applicationLegalese: '© 2025 거래클립',
+              applicationLegalese: '© 2025 AI거래장인',
               child: const Text('앱 정보'),
             ),
             loading: () => const ListTile(
@@ -146,7 +146,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             error: (_, __) => const AboutListTile(
               icon: Icon(Icons.info),
-              applicationName: '거래클립',
+              applicationName: 'AI거래장인',
               child: Text('앱 정보'),
             ),
           ),

@@ -94,7 +94,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '거래클립과 함께 시작하세요',
+                    'AI거래장인과 함께 시작하세요',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,

@@ -23,7 +23,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _searchQuery.isEmpty
-            ? const Text('거래클립')
+            ? const Text('AI거래장인')
             : Text('검색: $_searchQuery'),
         automaticallyImplyLeading: false,
         actions: [
