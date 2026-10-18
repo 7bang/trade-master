@@ -1,8 +1,9 @@
 # TradeClip - Claude Setup Documentation
 
 ## Project Overview
-**거래클립** - 소상공인을 위한 거래장 관리 Flutter 앱
-Backend: Supabase (PostgreSQL + Authentication)
+**AI거래장인** (구 거래클립) - 소상공인을 위한 거래장 관리 Flutter 앱
+Backend: Supabase (PostgreSQL + Authentication + Edge Functions)
+AI: Claude API — Edge Function `ai`를 통해서만 호출 (키는 앱에 포함하지 않음)
 
 ---
 
@@ -147,6 +148,36 @@ class SupabaseConfig {
 
 ---
 
+## AI Features (Edge Function)
+
+### 1. Architecture
+- 앱의 `AiService`(`lib/services/ai_service.dart`)가 `Supabase.instance.client.functions.invoke('ai', body: {task, input})` 호출
+- Edge Function `supabase/functions/ai/index.ts`가 로그인 사용자 확인 → 입력 검증 → 프롬프트 생성 → Claude 호출
+- **Claude API 키는 Edge Function secret `CLAUDE_API_KEY`에만 존재**. 앱 `.env`에 넣지 말 것 (`.env`는 앱 asset으로 번들되어 APK/IPA에서 추출 가능)
+
+### 2. Tasks & Models
+| task | 기능 | 모델 |
+|------|------|------|
+| `parse_text` | 자연어 → 거래 정보 (JSON) | `claude-haiku-5-5` |
+| `parse_image` | 영수증/메모 사진 → 거래 정보 (JSON) | `claude-sonnet-5-5` |
+| `insights` | 경영 인사이트 (JSON) | `claude-haiku-5-5` |
+| `collection_message` | 미수금 독촉 문구 | `claude-haiku-5-5` |
+| `document` | 견적서/납품서 텍스트 | `claude-haiku-5-5` |
+
+### 3. Deploy
+```bash
+# secret 등록 (supabase/functions/.env 는 gitignore)
+supabase secrets set --env-file supabase/functions/.env
+
+# 함수 배포 (운영 프로젝트에 즉시 반영됨)
+supabase functions deploy ai
+
+# 로그 확인
+supabase functions logs ai
+```
+
+---
+
 ## Supabase Dashboard Configuration
 
 ### Required Settings
@@ -263,6 +294,9 @@ trade-master/
 ├── database-schema.sql          # Original schema file
 ├── supabase/
 │   ├── config.toml              # Supabase configuration
+│   ├── functions/
+│   │   ├── .env                 # CLAUDE_API_KEY (gitignored)
+│   │   └── ai/index.ts          # Claude AI proxy Edge Function
 │   └── migrations/
 │       └── 20251125135713_initial_schema.sql
 ├── trade_master/                # Flutter app
@@ -443,7 +477,15 @@ flutter clean
 - ✅ P3: 서비스 경계 입력 검증 추가 (amount>0, name 빈값 방지)
 - ✅ P3: BalanceAvatar/TransactionTypeAvatar Semantics 라벨 추가
 
+### 2026-10-18
+- ✅ 앱 이름 변경: 거래클립 → AI거래장인 (Flutter, Android, iOS)
+- ✅ AI 기능 5가지: 자연어 거래 입력, 사진 거래 입력, 경영 인사이트, 미수금 독촉 문구, 견적서/납품서
+- ✅ Edge Function `ai` 신설 — Claude API 키를 서버에만 보관, 로그인 사용자 확인, 입력 제한
+- ✅ iOS 카메라·사진 권한 문구 추가, 이미지 형식 자동 감지
+- ✅ AI 응답 structured outputs + 앱측 검증, 오류 메시지 한국어화
+- ⏳ Edge Function 배포 및 실기기 테스트 대기 (`todo-AI.md` 참고)
+
 ---
 
-**Last Updated**: 2026-06-04
+**Last Updated**: 2026-10-18
 **Project Status**: Phase 1 완료 (v1.1.0+7 출시), Phase 2 준비 중
