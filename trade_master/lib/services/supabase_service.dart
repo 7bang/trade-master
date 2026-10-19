@@ -3,6 +3,7 @@ import '../models/business.dart';
 import '../models/customer.dart';
 import '../models/product.dart';
 import '../models/transaction.dart';
+import '../utils/app_exception.dart';
 
 class SupabaseService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -16,10 +17,8 @@ class SupabaseService {
   Future<AuthResponse> signUp(String email, String password) async {
     try {
       return await _client.auth.signUp(email: email, password: password);
-    } on AuthException catch (e) {
-      throw Exception('회원가입 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('회원가입 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '회원가입');
     }
   }
 
@@ -27,18 +26,16 @@ class SupabaseService {
     try {
       return await _client.auth
           .signInWithPassword(email: email, password: password);
-    } on AuthException catch (e) {
-      throw Exception('로그인 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('로그인 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '로그인');
     }
   }
 
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();
-    } catch (_) {
-      throw Exception('로그아웃 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '로그아웃');
     }
   }
 
@@ -48,18 +45,17 @@ class SupabaseService {
 
   // ========== 사업장 ==========
 
-  Future<Business> getBusiness(String userId) async {
+  /// 사업장이 아직 없으면 null, 조회 자체가 실패하면(네트워크 등) [AppException]
+  Future<Business?> getBusiness(String userId) async {
     try {
       final response = await _client
           .from('businesses')
           .select()
           .eq('user_id', userId)
-          .single();
-      return Business.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('사업장 정보를 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('사업장 조회 중 오류가 발생했습니다');
+          .maybeSingle();
+      return response == null ? null : Business.fromJson(response);
+    } catch (e) {
+      throw AppException.from(e, '사업장 조회');
     }
   }
 
@@ -76,10 +72,8 @@ class SupabaseService {
           .select()
           .single();
       return Business.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('사업장 등록 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('사업장 등록 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '사업장 등록');
     }
   }
 
@@ -89,10 +83,8 @@ class SupabaseService {
           .from('businesses')
           .update(business.toJson())
           .eq('id', business.id);
-    } on PostgrestException catch (e) {
-      throw Exception('사업장 수정 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('사업장 수정 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '사업장 수정');
     }
   }
 
@@ -110,10 +102,8 @@ class SupabaseService {
       return (response as List)
           .map((json) => Customer.fromJson(json as Map<String, dynamic>))
           .toList();
-    } on PostgrestException catch (e) {
-      throw Exception('거래처 목록을 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('거래처 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래처 조회');
     }
   }
 
@@ -125,16 +115,14 @@ class SupabaseService {
           .eq('id', customerId)
           .single();
       return Customer.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('거래처 정보를 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('거래처 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래처 조회');
     }
   }
 
   Future<Customer> createCustomer(Customer customer) async {
     if (customer.name.trim().isEmpty) {
-      throw Exception('거래처명을 입력해주세요');
+      throw AppException('거래처명을 입력해주세요');
     }
     try {
       final data = customer.toJson();
@@ -149,16 +137,14 @@ class SupabaseService {
           .select()
           .single();
       return Customer.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('거래처 등록 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래처 등록 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래처 등록');
     }
   }
 
   Future<void> updateCustomer(Customer customer) async {
     if (customer.name.trim().isEmpty) {
-      throw Exception('거래처명을 입력해주세요');
+      throw AppException('거래처명을 입력해주세요');
     }
     try {
       // DB에 없는 칸(balance: 조회용 잔액)과 바꾸면 안 되는 값은 제외
@@ -171,10 +157,8 @@ class SupabaseService {
           .from('customers')
           .update(data)
           .eq('id', customer.id);
-    } on PostgrestException catch (e) {
-      throw Exception('거래처 수정 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래처 수정 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래처 수정');
     }
   }
 
@@ -184,10 +168,8 @@ class SupabaseService {
           .from('customers')
           .update({'is_active': false})
           .eq('id', customerId);
-    } on PostgrestException catch (e) {
-      throw Exception('거래처 삭제 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래처 삭제 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래처 삭제');
     }
   }
 
@@ -205,10 +187,8 @@ class SupabaseService {
       return (response as List)
           .map((json) => Product.fromJson(json as Map<String, dynamic>))
           .toList();
-    } on PostgrestException catch (e) {
-      throw Exception('품목 목록을 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('품목 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '품목 조회');
     }
   }
 
@@ -220,19 +200,17 @@ class SupabaseService {
           .eq('id', productId)
           .single();
       return Product.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('품목 정보를 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('품목 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '품목 조회');
     }
   }
 
   Future<Product> createProduct(Product product) async {
     if (product.name.trim().isEmpty) {
-      throw Exception('품목명을 입력해주세요');
+      throw AppException('품목명을 입력해주세요');
     }
     if (product.unit.trim().isEmpty) {
-      throw Exception('단위를 입력해주세요');
+      throw AppException('단위를 입력해주세요');
     }
     try {
       final data = product.toJson();
@@ -246,10 +224,8 @@ class SupabaseService {
           .select()
           .single();
       return Product.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('품목 등록 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('품목 등록 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '품목 등록');
     }
   }
 
@@ -259,10 +235,8 @@ class SupabaseService {
           .from('products')
           .update(product.toJson())
           .eq('id', product.id);
-    } on PostgrestException catch (e) {
-      throw Exception('품목 수정 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('품목 수정 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '품목 수정');
     }
   }
 
@@ -272,10 +246,8 @@ class SupabaseService {
           .from('products')
           .update({'is_active': false})
           .eq('id', productId);
-    } on PostgrestException catch (e) {
-      throw Exception('품목 삭제 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('품목 삭제 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '품목 삭제');
     }
   }
 
@@ -316,10 +288,8 @@ class SupabaseService {
       return (response as List)
           .map((json) => Transaction.fromJson(json as Map<String, dynamic>))
           .toList();
-    } on PostgrestException catch (e) {
-      throw Exception('거래 목록을 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('거래 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래 조회');
     }
   }
 
@@ -331,16 +301,14 @@ class SupabaseService {
           .eq('id', transactionId)
           .single();
       return Transaction.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('거래 정보를 불러올 수 없습니다: ${e.message}');
-    } catch (_) {
-      throw Exception('거래 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래 조회');
     }
   }
 
   Future<Transaction> createTransaction(Transaction transaction) async {
     if (transaction.amount <= 0) {
-      throw Exception('금액은 0보다 커야 합니다');
+      throw AppException('금액은 0보다 커야 합니다');
     }
     try {
       final data = transaction.toJson();
@@ -356,10 +324,8 @@ class SupabaseService {
           .select()
           .single();
       return Transaction.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw Exception('거래 저장 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래 저장 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래 저장');
     }
   }
 
@@ -367,11 +333,11 @@ class SupabaseService {
   Future<List<Transaction>> createTransactionsBatch(
       List<Transaction> transactions) async {
     if (transactions.isEmpty) {
-      throw Exception('저장할 거래 내역이 없습니다');
+      throw AppException('저장할 거래 내역이 없습니다');
     }
     for (final t in transactions) {
       if (t.amount <= 0) {
-        throw Exception('모든 거래의 금액은 0보다 커야 합니다');
+        throw AppException('모든 거래의 금액은 0보다 커야 합니다');
       }
     }
     try {
@@ -393,10 +359,8 @@ class SupabaseService {
       return (response as List)
           .map((json) => Transaction.fromJson(json as Map<String, dynamic>))
           .toList();
-    } on PostgrestException catch (e) {
-      throw Exception('거래 일괄 저장 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래 저장 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래 일괄 저장');
     }
   }
 
@@ -413,10 +377,8 @@ class SupabaseService {
           .from('transactions')
           .update(data)
           .eq('id', transaction.id);
-    } on PostgrestException catch (e) {
-      throw Exception('거래 수정 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래 수정 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래 수정');
     }
   }
 
@@ -427,10 +389,8 @@ class SupabaseService {
           .from('transactions')
           .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
           .eq('id', transactionId);
-    } on PostgrestException catch (e) {
-      throw Exception('거래 삭제 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('거래 삭제 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '거래 삭제');
     }
   }
 
@@ -450,10 +410,8 @@ class SupabaseService {
             (row['balance'] as num).toDouble();
       }
       return result;
-    } on PostgrestException catch (e) {
-      throw Exception('잔액 일괄 조회 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('잔액 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '잔액 일괄 조회');
     }
   }
 
@@ -464,10 +422,8 @@ class SupabaseService {
         params: {'p_customer_id': customerId},
       );
       return (response as num).toDouble();
-    } on PostgrestException catch (e) {
-      throw Exception('잔액 조회 실패: ${e.message}');
-    } catch (_) {
-      throw Exception('잔액 조회 중 오류가 발생했습니다');
+    } catch (e) {
+      throw AppException.from(e, '잔액 조회');
     }
   }
 }

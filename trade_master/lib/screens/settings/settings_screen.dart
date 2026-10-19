@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/providers.dart';
-import '../../services/supabase_service.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 import '../../config/on_colors.dart';
 
 // 카카오 오픈채팅 문의 링크 — 실제 링크로 교체 필요
@@ -123,7 +124,21 @@ class SettingsScreen extends ConsumerWidget {
               );
 
               if (confirmed == true && context.mounted) {
-                await SupabaseService().signOut();
+                try {
+                  await ref.read(supabaseServiceProvider).signOut();
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(userMessage(e)),
+                        backgroundColor: OnColors.danger,
+                      ),
+                    );
+                  }
+                  return;
+                }
+                // 이전 사용자의 데이터가 캐시에 남지 않도록 비운다
+                ref.refreshAll();
                 if (context.mounted) {
                   context.go('/');
                 }

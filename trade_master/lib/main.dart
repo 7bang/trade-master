@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'config/supabase_config.dart';
 import 'config/app_theme.dart';
-import 'services/supabase_service.dart';
+import 'providers/providers.dart';
 import 'widgets/main_navigation_shell.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -88,33 +88,29 @@ class _MyAppState extends ConsumerState<MyApp> {
     return GoRouter(
       initialLocation: '/',
       redirect: (context, state) async {
-        final supabase = SupabaseService();
-        final user = supabase.currentUser;
-        final isAuthRoute = state.matchedLocation == '/' ||
-            state.matchedLocation == '/signup' ||
-            state.matchedLocation == '/business-setup';
+        final user = ref.read(supabaseServiceProvider).currentUser;
+        final location = state.matchedLocation;
+        final isLoginRoute = location == '/' || location == '/signup';
+        final isSetupRoute = location == '/business-setup';
 
         // 로그인되지 않은 경우
         if (user == null) {
-          if (isAuthRoute) return null;
-          return '/';
+          return (isLoginRoute || isSetupRoute) ? null : '/';
         }
 
-        // 로그인된 경우 - 비즈니스 정보 확인
+        // 로그인된 경우 - 사업장 확인 (캐시 사용: 화면 이동마다 서버를 부르지 않음)
         try {
-          await supabase.getBusiness(user.id);
-
-          // 비즈니스가 있는 경우
-          if (isAuthRoute) {
-            return '/customers';
+          final business =
+              await ref.read(businessByUserProvider(user.id).future);
+          if (business == null) {
+            return isSetupRoute ? null : '/business-setup';
           }
-          return null;
-        } catch (e) {
-          // 에러 발생 시 (비즈니스가 없는 경우) business-setup으로
-          if (state.matchedLocation != '/business-setup') {
-            return '/business-setup';
-          }
-          return null;
+          return (isLoginRoute || isSetupRoute) ? '/customers' : null;
+        } catch (_) {
+          // 네트워크 등 조회 실패 — 사업장이 없다고 단정하지 않는다.
+          // 목록 화면이 오류와 "다시 시도"를 보여주고, 다음 이동 때 다시 조회한다.
+          ref.invalidate(businessByUserProvider(user.id));
+          return isLoginRoute ? '/customers' : null;
         }
       },
       refreshListenable: GoRouterRefreshStream(

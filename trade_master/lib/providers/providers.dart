@@ -21,17 +21,20 @@ final currentUserProvider = StreamProvider<User?>((ref) {
 
 // ========== 사업장 Providers ==========
 
-final currentBusinessProvider = FutureProvider<Business?>((ref) async {
-  ref.keepAlive();
-  final service = ref.watch(supabaseServiceProvider);
-  final user = ref.watch(currentUserProvider).value;
-  if (user == null) return null;
+/// 사용자별 사업장 (라우터와 화면이 같은 캐시를 사용)
+/// - null: 아직 사업장을 등록하지 않음 → 사업장 등록 화면
+/// - 오류: 네트워크 등 조회 실패 → 등록 화면으로 보내지 않고 오류 표시
+final businessByUserProvider = FutureProvider.family<Business?, String>(
+  (ref, userId) => ref.watch(supabaseServiceProvider).getBusiness(userId),
+);
 
-  try {
-    return await service.getBusiness(user.id);
-  } catch (e) {
-    return null;
-  }
+final currentBusinessProvider = FutureProvider<Business?>((ref) async {
+  final service = ref.watch(supabaseServiceProvider);
+  // 앱 시작 직후 인증 스트림이 아직 값을 내기 전에는 현재 세션으로 보완
+  final userId =
+      ref.watch(currentUserProvider).value?.id ?? service.currentUser?.id;
+  if (userId == null) return null;
+  return ref.watch(businessByUserProvider(userId).future);
 });
 
 // ========== 거래처 Providers ==========
@@ -103,3 +106,36 @@ final transactionProvider = FutureProvider.family<Transaction, String>(
     return service.getTransaction(transactionId);
   },
 );
+
+/// 전체 거래내역 Provider (날짜 필터 지원)
+final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
+  final service = ref.watch(supabaseServiceProvider);
+  final business = await ref.watch(currentBusinessProvider.future);
+
+  if (business == null) return [];
+
+  return await service.getTransactions(
+    businessId: business.id,
+    startDate: filter.startDate,
+    endDate: filter.endDate,
+  );
+});
+
+/// 날짜 필터 클래스
+class DateFilter {
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const DateFilter({this.startDate, this.endDate});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DateFilter &&
+          runtimeType == other.runtimeType &&
+          startDate == other.startDate &&
+          endDate == other.endDate;
+
+  @override
+  int get hashCode => startDate.hashCode ^ endDate.hashCode;
+}

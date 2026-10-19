@@ -5,6 +5,7 @@ import '../../widgets/brand_logo.dart';
 import '../../providers/providers.dart';
 import '../../utils/validators.dart';
 import '../../config/on_colors.dart';
+import '../../utils/app_exception.dart';
 
 /// 회원가입 화면
 class SignupScreen extends ConsumerStatefulWidget {
@@ -52,7 +53,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );

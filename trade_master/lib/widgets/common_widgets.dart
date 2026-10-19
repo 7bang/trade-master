@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/on_colors.dart';
+import '../utils/app_exception.dart';
 
 /// 로딩 인디케이터
 class LoadingView extends StatelessWidget {
@@ -29,12 +30,12 @@ class ErrorView extends StatelessWidget {
             const Icon(Icons.error_outline, size: 64, color: OnColors.danger),
             const SizedBox(height: 16),
             Text(
-              '에러가 발생했습니다',
+              '불러오지 못했습니다',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              error.toString(),
+              userMessage(error),
               textAlign: TextAlign.center,
               style: TextStyle(color: OnColors.gray),
             ),

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/product.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 품목 등록/수정 화면
 class ProductFormScreen extends ConsumerStatefulWidget {
@@ -80,7 +82,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('품목 정보 로드 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -109,7 +111,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       final business = await ref.read(currentBusinessProvider.future);
 
       if (business == null) {
-        throw Exception('사업장 정보를 찾을 수 없습니다');
+        throw AppException('사업장 정보를 찾을 수 없습니다');
       }
 
       final unitPrice = _unitPriceController.text.trim().isEmpty
@@ -137,8 +139,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         await service.updateProduct(updatedProduct);
 
         // Provider 갱신
-        ref.invalidate(productsProvider);
-        ref.invalidate(productProvider(widget.productId!));
+        ref.refreshProducts();
 
         if (mounted) {
           context.go('/products');
@@ -174,7 +175,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         await service.createProduct(newProduct);
 
         // Provider 갱신
-        ref.invalidate(productsProvider);
+        ref.refreshProducts();
 
         if (mounted) {
           context.go('/products');
@@ -190,7 +191,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('저장 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -228,7 +229,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         await service.deleteProduct(widget.productId!);
 
         // Provider 갱신
-        ref.invalidate(productsProvider);
+        ref.refreshProducts();
 
         if (mounted) {
           context.go('/products');
@@ -243,7 +244,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('삭제 실패: ${e.toString()}'),
+              content: Text(userMessage(e)),
               backgroundColor: OnColors.danger,
             ),
           );

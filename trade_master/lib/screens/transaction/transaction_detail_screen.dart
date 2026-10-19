@@ -8,6 +8,8 @@ import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/transaction_receipt_widget.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 거래 상세 화면
 class TransactionDetailScreen extends ConsumerStatefulWidget {
@@ -31,9 +33,7 @@ class _TransactionDetailScreenState
   Future<void> _shareReceipt(Transaction transaction) async {
     try {
       final shareService = ref.read(shareServiceProvider);
-      final businessAsync = ref.read(currentBusinessProvider);
-
-      final business = await businessAsync.value;
+      final business = await ref.read(currentBusinessProvider.future);
       if (business == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +87,7 @@ class _TransactionDetailScreenState
         Navigator.pop(context); // 로딩 대화상자 닫기
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -125,9 +125,7 @@ class _TransactionDetailScreenState
         await service.deleteTransaction(widget.transactionId);
 
         // Provider 갱신
-        ref.invalidate(transactionsProvider);
-        ref.invalidate(customerProvider(transaction.customerId));
-        ref.invalidate(customersProvider);
+        ref.refreshTransactions();
 
         if (context.mounted) {
           context.go('/customers/${transaction.customerId}');
@@ -142,7 +140,7 @@ class _TransactionDetailScreenState
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('삭제 실패: ${e.toString()}'),
+              content: Text(userMessage(e)),
               backgroundColor: OnColors.danger,
             ),
           );

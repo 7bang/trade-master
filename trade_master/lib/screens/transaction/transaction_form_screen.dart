@@ -9,6 +9,8 @@ import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/ai_service.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 거래 입력/수정 화면
 class TransactionFormScreen extends ConsumerStatefulWidget {
@@ -91,7 +93,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('거래 정보 로드 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -138,12 +140,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       final business = await ref.read(currentBusinessProvider.future);
 
       if (business == null) {
-        throw Exception('사업장 정보를 찾을 수 없습니다');
+        throw AppException('사업장 정보를 찾을 수 없습니다');
       }
 
       final amount = _calculateAmount();
       if (amount <= 0) {
-        throw Exception('금액은 0보다 커야 합니다');
+        throw AppException('금액은 0보다 커야 합니다');
       }
 
       if (_isEdit && _originalTransaction != null) {
@@ -168,10 +170,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         await service.updateTransaction(updatedTransaction);
 
         // Provider 갱신
-        ref.invalidate(transactionsProvider);
-        ref.invalidate(transactionProvider(widget.transactionId!));
-        ref.invalidate(customerProvider(widget.customerId));
-        ref.invalidate(customersProvider);
+        ref.refreshTransactions();
 
         if (mounted) {
           context.go('/customers/${widget.customerId}');
@@ -208,9 +207,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         await service.createTransaction(newTransaction);
 
         // Provider 갱신
-        ref.invalidate(transactionsProvider);
-        ref.invalidate(customerProvider(widget.customerId));
-        ref.invalidate(customersProvider);
+        ref.refreshTransactions();
 
         if (mounted) {
           context.go('/customers/${widget.customerId}');
@@ -226,7 +223,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('저장 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -414,7 +411,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         },
                         loading: () => const LinearProgressIndicator(),
                         error: (err, stack) => Text(
-                          '품목 로드 실패: ${err.toString()}',
+                          userMessage(err),
                           style: const TextStyle(color: OnColors.danger),
                         ),
                       ),

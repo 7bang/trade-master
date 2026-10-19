@@ -7,6 +7,7 @@ import '../../providers/providers.dart';
 import '../../providers/ai_providers.dart';
 import '../../utils/formatters.dart';
 import '../../config/on_colors.dart';
+import '../../utils/app_exception.dart';
 
 void showCollectionMessageSheet(
   BuildContext context,
@@ -75,7 +76,7 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
+          _error = userMessage(e);
           _isLoading = false;
         });
       }

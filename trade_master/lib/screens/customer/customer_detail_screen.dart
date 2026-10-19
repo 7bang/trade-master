@@ -11,6 +11,8 @@ import '../../widgets/ai/collection_message_sheet.dart';
 import '../ai/ai_transaction_input_screen.dart';
 import '../document/trade_document_screen.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 거래처 상세 화면
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -32,16 +34,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   // 내역서 공유
   Future<void> _shareStatement() async {
     try {
-      final customerAsync = ref.read(customerProvider(widget.customerId));
-      final transactionsAsync =
-          ref.read(transactionsProvider(widget.customerId));
-      final businessAsync = ref.read(currentBusinessProvider);
+      // 아직 불러오는 중이어도 끝날 때까지 기다린다 (.value는 로딩 중 null)
+      final customer =
+          await ref.read(customerProvider(widget.customerId).future);
+      final transactions =
+          await ref.read(transactionsProvider(widget.customerId).future);
+      final business = await ref.read(currentBusinessProvider.future);
 
-      final customer = await customerAsync.value;
-      final transactions = await transactionsAsync.value;
-      final business = await businessAsync.value;
-
-      if (customer == null || business == null) {
+      if (business == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('정보를 불러올 수 없습니다')),
@@ -52,7 +52,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
 
       // 50건 초과 시 경고
       const maxTransactions = 50;
-      if (transactions != null && transactions.length > maxTransactions) {
+      if (transactions.length > maxTransactions) {
         if (mounted) {
           final confirmed = await showDialog<bool>(
             context: context,
@@ -133,7 +133,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         Navigator.pop(context); // 로딩 대화상자 닫기
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -512,7 +512,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                     ),
                     error: (err, _) => SliverFillRemaining(
                       child: Center(
-                        child: Text('에러: $err'),
+                        child: Text(userMessage(err)),
                       ),
                     ),
                   ),
@@ -664,7 +664,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       await service.deleteCustomer(widget.customerId);
 
       // Provider 갱신
-      ref.invalidate(customersProvider);
+      ref.refreshCustomers();
 
       if (context.mounted) {
         context.go('/customers');
@@ -679,7 +679,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('삭제 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );

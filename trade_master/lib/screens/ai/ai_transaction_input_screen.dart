@@ -7,6 +7,7 @@ import '../../services/ai_service.dart';
 import '../../utils/formatters.dart';
 import '../transaction/transaction_form_screen.dart';
 import '../../config/on_colors.dart';
+import '../../utils/app_exception.dart';
 
 /// AI를 이용한 거래 입력 화면 (자연어 + 사진)
 class AiTransactionInputScreen extends ConsumerStatefulWidget {
@@ -99,7 +100,7 @@ class _AiTransactionInputScreenState
     if (!mounted) return;
     setState(() {
       _isLoading = false;
-      _error = e.toString().replaceFirst('Exception: ', '');
+      _error = userMessage(e);
     });
   }
 

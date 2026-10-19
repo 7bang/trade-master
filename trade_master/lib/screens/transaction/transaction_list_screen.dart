@@ -7,46 +7,16 @@ import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../ai/insight_screen.dart';
 import '../../config/on_colors.dart';
-
-/// 전체 거래내역 Provider (날짜 필터 지원)
-final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
-  final service = ref.watch(supabaseServiceProvider);
-  final business = await ref.watch(currentBusinessProvider.future);
-
-  if (business == null) return [];
-
-  return await service.getTransactions(
-    businessId: business.id,
-    startDate: filter.startDate,
-    endDate: filter.endDate,
-  );
-});
-
-/// 날짜 필터 클래스
-class DateFilter {
-  final DateTime? startDate;
-  final DateTime? endDate;
-
-  const DateFilter({this.startDate, this.endDate});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DateFilter &&
-          runtimeType == other.runtimeType &&
-          startDate == other.startDate &&
-          endDate == other.endDate;
-
-  @override
-  int get hashCode => startDate.hashCode ^ endDate.hashCode;
-}
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 전체 거래내역 화면
 class TransactionListScreen extends ConsumerStatefulWidget {
   const TransactionListScreen({super.key});
 
   @override
-  ConsumerState<TransactionListScreen> createState() => _TransactionListScreenState();
+  ConsumerState<TransactionListScreen> createState() =>
+      _TransactionListScreenState();
 }
 
 class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
@@ -63,9 +33,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       data: (customers) async {
         if (customers.isEmpty) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('먼저 거래처를 등록해주세요')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('먼저 거래처를 등록해주세요')));
           }
           return;
         }
@@ -84,7 +54,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                   return ListTile(
                     leading: BalanceAvatar(balance: customer.balance),
                     title: Text(customer.name),
-                    subtitle: customer.phone != null ? Text(customer.phone!) : null,
+                    subtitle: customer.phone != null
+                        ? Text(customer.phone!)
+                        : null,
                     onTap: () {
                       Navigator.of(context).pop(customer.id);
                     },
@@ -106,14 +78,14 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         }
       },
       loading: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('거래처 목록을 불러오는 중...')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('거래처 목록을 불러오는 중...')));
       },
       error: (error, _) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessage(error))));
       },
     );
   }
@@ -131,9 +103,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
             icon: const Icon(Icons.auto_awesome),
             tooltip: 'AI 경영 인사이트',
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const InsightScreen()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const InsightScreen()));
             },
           ),
           IconButton(
@@ -145,103 +117,105 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
           ),
         ],
       ),
-      body: transactionsAsync.when(
-        data: (transactions) {
-          if (transactions.isEmpty) {
-            return EmptyStateView(
-              icon: Icons.receipt_long,
-              title: '거래 내역이 없습니다',
-              subtitle: '거래처 상세에서 거래를 추가해주세요',
-            );
-          }
+      body: RefreshIndicator(
+        onRefresh: () =>
+            ref.pullToRefresh(allTransactionsProvider(_dateFilter).future),
+        child: transactionsAsync.when(
+          data: (transactions) {
+            if (transactions.isEmpty) {
+              return EmptyStateView(
+                icon: Icons.receipt_long,
+                title: '거래 내역이 없습니다',
+                subtitle: '거래처 상세에서 거래를 추가해주세요',
+              );
+            }
 
-          // 날짜별로 그룹화
-          final groupedTransactions = <String, List<Transaction>>{};
-          for (final transaction in transactions) {
-            final dateKey = Formatters.formatDate(transaction.date);
-            groupedTransactions.putIfAbsent(dateKey, () => []);
-            groupedTransactions[dateKey]!.add(transaction);
-          }
+            // 날짜별로 그룹화
+            final groupedTransactions = <String, List<Transaction>>{};
+            for (final transaction in transactions) {
+              final dateKey = Formatters.formatDate(transaction.date);
+              groupedTransactions.putIfAbsent(dateKey, () => []);
+              groupedTransactions[dateKey]!.add(transaction);
+            }
 
-          // 날짜 역순 정렬
-          final sortedDates = groupedTransactions.keys.toList()
-            ..sort((a, b) => b.compareTo(a));
+            // 날짜 역순 정렬
+            final sortedDates = groupedTransactions.keys.toList()
+              ..sort((a, b) => b.compareTo(a));
 
-          return ListView.builder(
-            itemCount: sortedDates.length,
-            itemBuilder: (context, index) {
-              final dateKey = sortedDates[index];
-              final dayTransactions = groupedTransactions[dateKey]!;
+            return ListView.builder(
+              itemCount: sortedDates.length,
+              itemBuilder: (context, index) {
+                final dateKey = sortedDates[index];
+                final dayTransactions = groupedTransactions[dateKey]!;
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 날짜 헤더
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    color: OnColors.paper,
-                    child: Text(
-                      dateKey,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: OnColors.gray,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 날짜 헤더
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                    ),
-                  ),
-                  // 거래 목록
-                  ...dayTransactions.map((transaction) {
-                    return ListTile(
-                      leading: TransactionTypeAvatar(
-                        isReceivable: transaction.type == TransactionType.receivable,
-                      ),
-                      title: Text(
-                        transaction.customer?.name ?? '거래처 정보 없음',
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (transaction.product != null)
-                            Text(transaction.product!.name),
-                          if (transaction.memo != null &&
-                              transaction.memo!.isNotEmpty)
-                            Text(
-                              transaction.memo!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: OnColors.gray,
-                              ),
-                            ),
-                        ],
-                      ),
-                      trailing: Text(
-                        '${transaction.type == TransactionType.receivable ? '+' : '-'}${Formatters.formatCurrency(transaction.amount)}',
+                      color: OnColors.paper,
+                      child: Text(
+                        dateKey,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: transaction.type == TransactionType.receivable
-                              ? OnColors.receivable
-                              : OnColors.payable,
+                          color: OnColors.gray,
                         ),
                       ),
-                      onTap: () {
-                        context.push('/transactions/${transaction.id}');
-                      },
-                    );
-                  }),
-                ],
-              );
-            },
-          );
-        },
-        loading: () => const LoadingView(),
-        error: (error, stack) => ErrorView(
-          error: error,
-          onRetry: () => ref.refresh(allTransactionsProvider(_dateFilter)),
+                    ),
+                    // 거래 목록
+                    ...dayTransactions.map((transaction) {
+                      return ListTile(
+                        leading: TransactionTypeAvatar(
+                          isReceivable:
+                              transaction.type == TransactionType.receivable,
+                        ),
+                        title: Text(transaction.customer?.name ?? '거래처 정보 없음'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (transaction.product != null)
+                              Text(transaction.product!.name),
+                            if (transaction.memo != null &&
+                                transaction.memo!.isNotEmpty)
+                              Text(
+                                transaction.memo!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: OnColors.gray,
+                                ),
+                              ),
+                          ],
+                        ),
+                        trailing: Text(
+                          '${transaction.type == TransactionType.receivable ? '+' : '-'}${Formatters.formatCurrency(transaction.amount)}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                transaction.type == TransactionType.receivable
+                                ? OnColors.receivable
+                                : OnColors.payable,
+                          ),
+                        ),
+                        onTap: () {
+                          context.push('/transactions/${transaction.id}');
+                        },
+                      );
+                    }),
+                  ],
+                );
+              },
+            );
+          },
+          loading: () => const LoadingView(),
+          error: (error, stack) =>
+              ErrorView(error: error, onRetry: () => ref.refreshAll()),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -336,26 +310,21 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      initialDateRange: _dateFilter.startDate != null && _dateFilter.endDate != null
+      initialDateRange:
+          _dateFilter.startDate != null && _dateFilter.endDate != null
           ? DateTimeRange(
               start: _dateFilter.startDate!,
               end: _dateFilter.endDate!,
             )
           : null,
       builder: (context, child) {
-        return Theme(
-          data: Theme.of(context),
-          child: child!,
-        );
+        return Theme(data: Theme.of(context), child: child!);
       },
     );
 
     if (picked != null) {
       setState(() {
-        _dateFilter = DateFilter(
-          startDate: picked.start,
-          endDate: picked.end,
-        );
+        _dateFilter = DateFilter(startDate: picked.start, endDate: picked.end);
       });
     }
   }

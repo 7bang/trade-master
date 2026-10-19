@@ -7,6 +7,8 @@ import '../../models/transaction.dart';
 import '../../models/product.dart';
 import '../../utils/formatters.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 여러 건 거래 입력 화면
 class MultiTransactionFormScreen extends ConsumerStatefulWidget {
@@ -98,7 +100,7 @@ class _MultiTransactionFormScreenState
       );
 
       if (business == null) {
-        throw Exception('사업장 정보를 찾을 수 없습니다');
+        throw AppException('사업장 정보를 찾을 수 없습니다');
       }
 
       // 모든 거래를 단일 INSERT로 저장 (원자성 보장)
@@ -129,8 +131,7 @@ class _MultiTransactionFormScreenState
       await service.createTransactionsBatch(transactionsList);
 
       // Provider 갱신
-      ref.invalidate(transactionsProvider(widget.customerId));
-      ref.invalidate(customerProvider(widget.customerId));
+      ref.refreshTransactions();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -145,7 +146,7 @@ class _MultiTransactionFormScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('저장 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
             duration: const Duration(seconds: 5),
           ),
@@ -274,7 +275,7 @@ class _MultiTransactionFormScreenState
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('에러: $err')),
+        error: (err, _) => Center(child: Text(userMessage(err))),
       ),
     );
   }

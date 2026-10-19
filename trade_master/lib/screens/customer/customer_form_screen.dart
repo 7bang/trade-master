@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/customer.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 거래처 등록/수정 화면
 class CustomerFormScreen extends ConsumerStatefulWidget {
@@ -50,7 +52,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('거래처 정보 로드 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );
@@ -76,7 +78,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       final business = await ref.read(currentBusinessProvider.future);
 
       if (business == null) {
-        throw Exception('사업장 정보를 찾을 수 없습니다');
+        throw AppException('사업장 정보를 찾을 수 없습니다');
       }
 
       if (_isEdit && _originalCustomer != null) {
@@ -95,8 +97,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
         await service.updateCustomer(updatedCustomer);
 
         // Provider 갱신
-        ref.invalidate(customersProvider);
-        ref.invalidate(customerProvider(widget.customerId!));
+        ref.refreshCustomers();
 
         if (mounted) {
           context.go('/customers/${widget.customerId}');
@@ -128,7 +129,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
         await service.createCustomer(newCustomer);
 
         // Provider 갱신
-        ref.invalidate(customersProvider);
+        ref.refreshCustomers();
 
         if (mounted) {
           context.go('/customers');
@@ -144,7 +145,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('저장 실패: ${e.toString()}'),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );

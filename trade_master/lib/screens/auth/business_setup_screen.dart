@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/business.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 사업장 정보 설정 화면
 ///
@@ -40,7 +42,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
       final user = service.currentUser;
 
       if (user == null) {
-        throw Exception('로그인이 필요합니다');
+        throw AppException('로그인이 필요합니다');
       }
 
       // 사업장 정보 생성
@@ -58,7 +60,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
       await service.createBusiness(business);
 
       // Provider 갱신
-      ref.invalidate(currentBusinessProvider);
+      ref.refreshBusiness();
 
       if (mounted) {
         // 성공 메시지
@@ -76,7 +78,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            content: Text(userMessage(e)),
             backgroundColor: OnColors.danger,
           ),
         );

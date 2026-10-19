@@ -7,6 +7,7 @@ import '../../providers/ai_providers.dart';
 import '../../services/ai_service.dart';
 import '../../utils/formatters.dart';
 import '../../config/on_colors.dart';
+import '../../utils/app_exception.dart';
 
 /// AI 경영 인사이트 화면
 class InsightScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
       final customers = await ref.read(customersProvider.future);
 
       if (business == null) {
-        throw Exception('사업장 정보를 불러올 수 없습니다');
+        throw AppException('사업장 정보를 불러올 수 없습니다');
       }
 
       final service = ref.read(supabaseServiceProvider);
@@ -91,7 +92,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
+          _error = userMessage(e);
           _isLoading = false;
         });
       }

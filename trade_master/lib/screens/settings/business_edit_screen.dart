@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/business.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
+import '../../utils/app_exception.dart';
 
 /// 사업장 정보 수정 화면
 class BusinessEditScreen extends ConsumerStatefulWidget {
@@ -51,7 +53,7 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('사업장 정보를 불러올 수 없습니다: $e')),
+          SnackBar(content: Text(userMessage(e))),
         );
       }
     }
@@ -76,7 +78,7 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
       await service.updateBusiness(updatedBusiness);
 
       // Provider 갱신
-      ref.invalidate(currentBusinessProvider);
+      ref.refreshBusiness();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -90,7 +92,7 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
+          SnackBar(content: Text(userMessage(e))),
         );
       }
     }

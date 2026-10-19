@@ -6,6 +6,7 @@ import '../../models/product.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
 
 /// 품목 목록 화면
 class ProductListScreen extends ConsumerWidget {
@@ -20,126 +21,120 @@ class ProductListScreen extends ConsumerWidget {
         title: const Text('품목 관리'),
         automaticallyImplyLeading: false,
       ),
-      body: productsAsync.when(
-        data: (products) {
-          if (products.isEmpty) {
-            return EmptyStateView(
-              icon: Icons.inventory_2,
-              title: '등록된 품목이 없습니다',
-              subtitle: '자주 거래하는 품목을 등록하면\n거래 입력이 훨씬 빨라집니다',
-              actionLabel: '품목 추가하기',
-              onAction: () => context.go('/products/new'),
-            );
-          }
+      body: RefreshIndicator(
+        onRefresh: () => ref.pullToRefresh(productsProvider.future),
+        child: productsAsync.when(
+          data: (products) {
+            if (products.isEmpty) {
+              return EmptyStateView(
+                icon: Icons.inventory_2,
+                title: '등록된 품목이 없습니다',
+                subtitle: '자주 거래하는 품목을 등록하면\n거래 입력이 훨씬 빨라집니다',
+                actionLabel: '품목 추가하기',
+                onAction: () => context.go('/products/new'),
+              );
+            }
 
-          // 카테고리별로 그룹화
-          final groupedProducts = <String, List<Product>>{};
-          for (final product in products) {
-            final category = product.category ?? '미분류';
-            groupedProducts.putIfAbsent(category, () => []).add(product);
-          }
+            // 카테고리별로 그룹화
+            final groupedProducts = <String, List<Product>>{};
+            for (final product in products) {
+              final category = product.category ?? '미분류';
+              groupedProducts.putIfAbsent(category, () => []).add(product);
+            }
 
-          // 카테고리 정렬 (미분류는 항상 마지막)
-          final sortedCategories = groupedProducts.keys.toList()
-            ..sort((a, b) {
-              if (a == '미분류') return 1;
-              if (b == '미분류') return -1;
-              return a.compareTo(b);
-            });
+            // 카테고리 정렬 (미분류는 항상 마지막)
+            final sortedCategories = groupedProducts.keys.toList()
+              ..sort((a, b) {
+                if (a == '미분류') return 1;
+                if (b == '미분류') return -1;
+                return a.compareTo(b);
+              });
 
-          return Column(
-            children: [
-              // 통계 카드
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: OnColors.paper,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: OnColors.line,
+            return Column(
+              children: [
+                // 통계 카드
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: OnColors.paper,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: OnColors.line),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _StatItem(
+                        icon: Icons.inventory_2,
+                        label: '전체 품목',
+                        value: '${products.length}개',
+                      ),
+                      Container(width: 1, height: 40, color: OnColors.line),
+                      _StatItem(
+                        icon: Icons.category,
+                        label: '카테고리',
+                        value: '${groupedProducts.length}개',
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _StatItem(
-                      icon: Icons.inventory_2,
-                      label: '전체 품목',
-                      value: '${products.length}개',
-                    ),
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: OnColors.line,
-                    ),
-                    _StatItem(
-                      icon: Icons.category,
-                      label: '카테고리',
-                      value: '${groupedProducts.length}개',
-                    ),
-                  ],
-                ),
-              ),
 
-              // 품목 목록
-              Expanded(
-                child: ListView.builder(
-                  itemCount: sortedCategories.length,
-                  itemBuilder: (context, categoryIndex) {
-                    final category = sortedCategories[categoryIndex];
-                    final categoryProducts = groupedProducts[category]!;
+                // 품목 목록
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: sortedCategories.length,
+                    itemBuilder: (context, categoryIndex) {
+                      final category = sortedCategories[categoryIndex];
+                      final categoryProducts = groupedProducts[category]!;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 카테고리 헤더
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _getCategoryIcon(category),
-                                size: 20,
-                                color: OnColors.ink,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                category,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 카테고리 헤더
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _getCategoryIcon(category),
+                                  size: 20,
+                                  color: OnColors.ink,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  category,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: OnColors.ink,
+                                      ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: OnColors.paper,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${categoryProducts.length}',
+                                    style: TextStyle(
+                                      fontSize: 12,
                                       color: OnColors.ink,
                                     ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      OnColors.paper,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${categoryProducts.length}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: OnColors.ink,
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
 
-                        // 품목 카드들
-                        ...categoryProducts.map((product) => Card(
+                          // 품목 카드들
+                          ...categoryProducts.map(
+                            (product) => Card(
                               margin: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 4,
@@ -212,20 +207,20 @@ class ProductListScreen extends ConsumerWidget {
                                   context.go('/products/${product.id}/edit');
                                 },
                               ),
-                            )),
-                        const SizedBox(height: 16),
-                      ],
-                    );
-                  },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-        loading: () => const LoadingView(),
-        error: (err, stack) => ErrorView(
-          error: err,
-          onRetry: () => ref.refresh(productsProvider),
+              ],
+            );
+          },
+          loading: () => const LoadingView(),
+          error: (err, stack) =>
+              ErrorView(error: err, onRetry: () => ref.refreshAll()),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -270,19 +265,9 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(
-          icon,
-          size: 24,
-          color: OnColors.ink,
-        ),
+        Icon(icon, size: 24, color: OnColors.ink),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: OnColors.gray,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: OnColors.gray)),
         const SizedBox(height: 2),
         Text(
           value,

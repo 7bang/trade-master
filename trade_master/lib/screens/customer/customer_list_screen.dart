@@ -6,6 +6,7 @@ import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../config/on_colors.dart';
+import '../../providers/data_refresh.dart';
 
 /// 거래처 목록 화면
 class CustomerListScreen extends ConsumerStatefulWidget {
@@ -48,178 +49,178 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
         ],
       ),
-      body: customersAsync.when(
-        data: (allCustomers) {
-          // 검색 필터링
-          final customers = _searchQuery.isEmpty
-              ? allCustomers
-              : allCustomers.where((customer) {
-                  final query = _searchQuery.toLowerCase();
-                  final nameMatch = customer.name.toLowerCase().contains(query);
-                  final phoneMatch = customer.phone?.toLowerCase().contains(query) ?? false;
-                  return nameMatch || phoneMatch;
-                }).toList();
-          if (customers.isEmpty) {
-            return EmptyStateView(
-              icon: _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
-              title: _searchQuery.isEmpty ? '등록된 거래처가 없습니다' : '검색 결과가 없습니다',
-              actionLabel: _searchQuery.isEmpty ? '거래처 추가하기' : '검색 초기화',
-              onAction: _searchQuery.isEmpty
-                  ? () => context.push('/customers/new')
-                  : () => setState(() => _searchQuery = ''),
-            );
-          }
-
-          // 전체 잔액 계산
-          final totalReceivable = customers
-              .where((c) => c.balance > 0)
-              .fold(0.0, (sum, c) => sum + c.balance);
-          final totalPayable = customers
-              .where((c) => c.balance < 0)
-              .fold(0.0, (sum, c) => sum + c.balance.abs());
-          final netBalance = totalReceivable - totalPayable;
-
-          return Column(
-            children: [
-              // 전체 잔액 요약
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: OnColors.ink,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      '전체 잔액',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _BalanceSummaryItem(
-                          label: '받을 돈',
-                          amount: totalReceivable,
-                          icon: Icons.arrow_downward,
-                          isPositive: true,
-                        ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: Colors.white30,
-                        ),
-                        _BalanceSummaryItem(
-                          label: '줄 돈',
-                          amount: totalPayable,
-                          icon: Icons.arrow_upward,
-                          isPositive: false,
-                        ),
-                      ],
-                    ),
-                    const Divider(color: Colors.white30, height: 24),
-                    Text(
-                      '순액: ${Formatters.formatCurrency(netBalance)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 거래처 목록
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      '내 거래처',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${customers.length}곳',
-                      style: TextStyle(
-                        color: OnColors.gray,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: customers.length,
-                  itemBuilder: (context, index) {
-                    final customer = customers[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: BalanceAvatar(balance: customer.balance),
-                        title: Text(
-                          customer.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (customer.phone != null) ...[
-                              const SizedBox(height: 4),
-                              Text(customer.phone!),
-                            ],
-                          ],
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              Formatters.formatCurrency(customer.balance.abs()),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: customer.balance >= 0
-                                    ? OnColors.receivable
-                                    : OnColors.payable,
-                              ),
-                            ),
-                            Text(
-                              Formatters.formatBalanceType(customer.balance),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: OnColors.gray,
-                              ),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          context.push('/customers/${customer.id}');
-                        },
-                      ),
+      body: RefreshIndicator(
+        onRefresh: () => ref.pullToRefresh(customersProvider.future),
+        child: customersAsync.when(
+          data: (allCustomers) {
+            // 검색 필터링
+            final customers = _searchQuery.isEmpty
+                ? allCustomers
+                : allCustomers.where((customer) {
+                    final query = _searchQuery.toLowerCase();
+                    final nameMatch = customer.name.toLowerCase().contains(
+                      query,
                     );
-                  },
+                    final phoneMatch =
+                        customer.phone?.toLowerCase().contains(query) ?? false;
+                    return nameMatch || phoneMatch;
+                  }).toList();
+            if (customers.isEmpty) {
+              return EmptyStateView(
+                icon: _searchQuery.isEmpty
+                    ? Icons.people_outline
+                    : Icons.search_off,
+                title: _searchQuery.isEmpty ? '등록된 거래처가 없습니다' : '검색 결과가 없습니다',
+                actionLabel: _searchQuery.isEmpty ? '거래처 추가하기' : '검색 초기화',
+                onAction: _searchQuery.isEmpty
+                    ? () => context.push('/customers/new')
+                    : () => setState(() => _searchQuery = ''),
+              );
+            }
+
+            // 전체 잔액 계산
+            final totalReceivable = customers
+                .where((c) => c.balance > 0)
+                .fold(0.0, (sum, c) => sum + c.balance);
+            final totalPayable = customers
+                .where((c) => c.balance < 0)
+                .fold(0.0, (sum, c) => sum + c.balance.abs());
+            final netBalance = totalReceivable - totalPayable;
+
+            return Column(
+              children: [
+                // 전체 잔액 요약
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: OnColors.ink,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        '전체 잔액',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _BalanceSummaryItem(
+                            label: '받을 돈',
+                            amount: totalReceivable,
+                            icon: Icons.arrow_downward,
+                            isPositive: true,
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white30,
+                          ),
+                          _BalanceSummaryItem(
+                            label: '줄 돈',
+                            amount: totalPayable,
+                            icon: Icons.arrow_upward,
+                            isPositive: false,
+                          ),
+                        ],
+                      ),
+                      const Divider(color: Colors.white30, height: 24),
+                      Text(
+                        '순액: ${Formatters.formatCurrency(netBalance)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-        loading: () => const LoadingView(),
-        error: (err, stack) => ErrorView(
-          error: err,
-          onRetry: () => ref.refresh(customersProvider),
+
+                // 거래처 목록
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Text(
+                        '내 거래처',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${customers.length}곳',
+                        style: TextStyle(color: OnColors.gray),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: customers.length,
+                    itemBuilder: (context, index) {
+                      final customer = customers[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: BalanceAvatar(balance: customer.balance),
+                          title: Text(
+                            customer.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (customer.phone != null) ...[
+                                const SizedBox(height: 4),
+                                Text(customer.phone!),
+                              ],
+                            ],
+                          ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                Formatters.formatCurrency(
+                                  customer.balance.abs(),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: customer.balance >= 0
+                                      ? OnColors.receivable
+                                      : OnColors.payable,
+                                ),
+                              ),
+                              Text(
+                                Formatters.formatBalanceType(customer.balance),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: OnColors.gray,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            context.push('/customers/${customer.id}');
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+          loading: () => const LoadingView(),
+          error: (err, stack) =>
+              ErrorView(error: err, onRetry: () => ref.refreshAll()),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -240,11 +241,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Row(
-          children: [
-            Icon(Icons.search),
-            SizedBox(width: 8),
-            Text('거래처 검색'),
-          ],
+          children: [Icon(Icons.search), SizedBox(width: 8), Text('거래처 검색')],
         ),
         content: TextField(
           controller: controller,
@@ -311,18 +308,11 @@ class _BalanceSummaryItem extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
-              icon,
-              color: Colors.white70,
-              size: 16,
-            ),
+            Icon(icon, color: Colors.white70, size: 16),
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ],
         ),
