@@ -47,7 +47,6 @@ dependencies:
   go_router: ^14.0.0
 
   # 핵심 기능: 공유
-  screenshot: ^3.0.0
   share_plus: ^10.0.0
   path_provider: ^2.1.3
 
