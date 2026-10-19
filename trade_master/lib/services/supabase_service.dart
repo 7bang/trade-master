@@ -157,10 +157,19 @@ class SupabaseService {
   }
 
   Future<void> updateCustomer(Customer customer) async {
+    if (customer.name.trim().isEmpty) {
+      throw Exception('거래처명을 입력해주세요');
+    }
     try {
+      // DB에 없는 칸(balance: 조회용 잔액)과 바꾸면 안 되는 값은 제외
+      final data = customer.toJson();
+      data.remove('id');
+      data.remove('created_at');
+      data.remove('balance');
+
       await _client
           .from('customers')
-          .update(customer.toJson())
+          .update(data)
           .eq('id', customer.id);
     } on PostgrestException catch (e) {
       throw Exception('거래처 수정 실패: ${e.message}');
@@ -393,9 +402,16 @@ class SupabaseService {
 
   Future<void> updateTransaction(Transaction transaction) async {
     try {
+      // DB에 없는 칸(customer, product: 조회 시 붙는 연관 정보)과 바꾸면 안 되는 값은 제외
+      final data = transaction.toJson();
+      data.remove('id');
+      data.remove('created_at');
+      data.remove('customer');
+      data.remove('product');
+
       await _client
           .from('transactions')
-          .update(transaction.toJson())
+          .update(data)
           .eq('id', transaction.id);
     } on PostgrestException catch (e) {
       throw Exception('거래 수정 실패: ${e.message}');
