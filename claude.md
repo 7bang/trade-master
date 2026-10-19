@@ -1,9 +1,42 @@
-# TradeClip - Claude Setup Documentation
+# 폰거래장 온 - Claude Setup Documentation
 
 ## Project Overview
-**AI거래장인** (구 거래클립) - 소상공인을 위한 거래장 관리 Flutter 앱
+**폰거래장 온** (구 거래클립 → AI거래장인) - 종이 거래장을 폰에 담아 찍고, 저장하고, 공유하는 거래장 앱 (Flutter)
 Backend: Supabase (PostgreSQL + Authentication + Edge Functions)
 AI: Claude API — Edge Function `ai`를 통해서만 호출 (키는 앱에 포함하지 않음)
+타깃: 40대 이상 시장 상인·도매업체 사장님
+
+---
+
+## Brand & Design (필독)
+
+**디자인·UI·문구 작업 전에 반드시 [`BRAND_GUIDE.md`](BRAND_GUIDE.md)를 먼저 읽는다.** (이름, 로고 사용 규칙, 색상 토큰, 글자 크기, 상태 표시 원칙)
+
+| 항목 | 위치 |
+|---|---|
+| 브랜드 가이드 | `BRAND_GUIDE.md` (루트) |
+| 색상 토큰 | `trade_master/lib/config/on_colors.dart` (`OnColors`) — 새 색상 하드코딩 금지 |
+| 테마 | `trade_master/lib/config/app_theme.dart` |
+| 로고 위젯 | `trade_master/lib/widgets/brand_logo.dart` (`BrandLogo.horizontal / .vertical / .symbol`) |
+| 로고·심볼 SVG (앱 번들) | `trade_master/assets/logo/`, `trade_master/assets/symbol/` |
+| 앱 아이콘 원본 | `trade_master/assets/png/app-icon-1024.png`, 적응형 전경 `app-icon-adaptive-foreground.png` |
+| 파비콘·소셜·마케팅 PNG | `trade_master/assets/favicon/`, `social/`, `png/` (pubspec 미등록 → 앱에 포함 안 됨) |
+
+핵심 규칙 요약:
+- 앱 이름 표기: `폰거래장 온` (띄어쓰기 필수)
+- 색 비율 한지 60 : 먹남 30 : 인주 10 — 인주(`OnColors.vermilion`)는 저장·확정 버튼과 심볼에만
+- 본문 최소 17px, 버튼 높이 56px, 카드·버튼 모서리 14px, 그림자 대신 테두리
+- 거래 방향 색: 받을 돈 `OnColors.receivable`(황토), 줄 돈 `OnColors.payable`(남색) — 빨강·초록 사용 금지
+- 알림: 완료 `OnColors.success`, 오류·삭제 `OnColors.danger` / 장식용 아이콘·헤더는 `OnColors.ink` (인주 아님)
+- 상태는 색 + 기호 + 글자로 표시, 상태 원형은 배경 채움 대신 테두리 + 아이콘색
+- 로고 비율 변형·그림자·그라데이션·서체 교체 금지
+
+앱 아이콘 다시 만들기:
+```bash
+cd trade_master
+dart run flutter_launcher_icons   # pubspec.yaml 의 flutter_launcher_icons 설정 사용
+cp assets/favicon/favicon-32.png web/favicon.png   # 웹 파비콘은 마이크로 심볼 (생성 후 덮어쓰기)
+```
 
 ---
 
@@ -488,6 +521,12 @@ flutter clean
 - ✅ 견적서/납품서 이미지 생성 (AI 미사용, `TradeDocumentWidget`) — 거래처 상세 공유 메뉴에 내역서/견적서/납품서
 - ✅ 웹(Chrome)에서 이미지 공유 실패 수정 (`ShareService` 웹은 `XFile.fromData`)
 - ✅ Edge Function 배포, Chrome 테스트 완료 / ⏳ Android 실기기 테스트 대기 (`todo-AI.md` 참고)
+- ✅ 리브랜딩: AI거래장인 → **폰거래장 온** (`BRAND_GUIDE.md`)
+  - 앱 아이콘 교체 (Android 적응형 포함, iOS, 웹 PWA 아이콘·파비콘)
+  - 브랜드 테마 (`OnColors`, 한지 배경·인주 버튼·17px 본문·56px 버튼·테두리 카드)
+  - 로그인(세로형 로고+태그라인), 회원가입(심볼), 거래처 목록 상단(가로형 로고), 앱 정보(심볼)
+  - 영수증·내역서·견적서 하단 표기 변경
+  - 화면별 하드코딩 색상 전부 토큰으로 전환 (A안: 받을 돈 황토 / 줄 돈 남색, 그라데이션·그림자 제거, 큰 헤더 먹남)
 
 ---
 
