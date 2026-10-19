@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../models/product.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
+import '../../config/on_colors.dart';
 
 /// 품목 목록 화면
 class ProductListScreen extends ConsumerWidget {
@@ -54,10 +55,10 @@ class ProductListScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  color: OnColors.paper,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                    color: OnColors.line,
                   ),
                 ),
                 child: Row(
@@ -71,7 +72,7 @@ class ProductListScreen extends ConsumerWidget {
                     Container(
                       width: 1,
                       height: 40,
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      color: OnColors.line,
                     ),
                     _StatItem(
                       icon: Icons.category,
@@ -101,7 +102,7 @@ class ProductListScreen extends ConsumerWidget {
                               Icon(
                                 _getCategoryIcon(category),
                                 size: 20,
-                                color: Theme.of(context).primaryColor,
+                                color: OnColors.ink,
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -111,7 +112,7 @@ class ProductListScreen extends ConsumerWidget {
                                     .titleMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).primaryColor,
+                                      color: OnColors.ink,
                                     ),
                               ),
                               const SizedBox(width: 8),
@@ -122,14 +123,14 @@ class ProductListScreen extends ConsumerWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color:
-                                      Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      OnColors.paper,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   '${categoryProducts.length}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Theme.of(context).primaryColor,
+                                    color: OnColors.ink,
                                   ),
                                 ),
                               ),
@@ -145,12 +146,10 @@ class ProductListScreen extends ConsumerWidget {
                               ),
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: Theme.of(context)
-                                      .primaryColor
-                                      .withValues(alpha: 0.1),
+                                  backgroundColor: OnColors.paper,
                                   child: Icon(
                                     Icons.inventory_2,
-                                    color: Theme.of(context).primaryColor,
+                                    color: OnColors.ink,
                                   ),
                                 ),
                                 title: Text(
@@ -168,7 +167,7 @@ class ProductListScreen extends ConsumerWidget {
                                         '코드: ${product.code}',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.grey.shade600,
+                                          color: OnColors.gray,
                                         ),
                                       ),
                                     ],
@@ -178,7 +177,7 @@ class ProductListScreen extends ConsumerWidget {
                                         product.description!,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.grey.shade500,
+                                          color: OnColors.gray,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -197,14 +196,14 @@ class ProductListScreen extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).primaryColor,
+                                        color: OnColors.ink,
                                       ),
                                     ),
                                     Text(
                                       '원/${product.unit}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade600,
+                                        color: OnColors.gray,
                                       ),
                                     ),
                                   ],
@@ -274,14 +273,14 @@ class _StatItem extends StatelessWidget {
         Icon(
           icon,
           size: 24,
-          color: Theme.of(context).primaryColor,
+          color: OnColors.ink,
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey.shade600,
+            color: OnColors.gray,
           ),
         ),
         const SizedBox(height: 2),
@@ -290,7 +289,7 @@ class _StatItem extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).primaryColor,
+            color: OnColors.ink,
           ),
         ),
       ],

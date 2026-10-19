@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/formatters.dart';
 import 'receipt_styles.dart';
+import '../../config/on_colors.dart';
 
 /// 견적서 / 납품서 구분
 enum TradeDocumentType {
@@ -97,7 +98,7 @@ class TradeDocumentWidget extends StatelessWidget {
               horizontal: ReceiptStyles.paddingMedium,
             ),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: OnColors.paper,
               borderRadius: BorderRadius.circular(ReceiptStyles.borderRadius),
             ),
             child: Row(
@@ -150,7 +151,7 @@ class TradeDocumentWidget extends StatelessWidget {
           const SizedBox(height: ReceiptStyles.paddingMedium),
           ReceiptStyles.dashedDivider(),
           const Center(
-            child: Text('AI거래장인으로 작성', style: ReceiptStyles.smallStyle),
+            child: Text('폰거래장 온으로 작성', style: ReceiptStyles.smallStyle),
           ),
         ],
       ),

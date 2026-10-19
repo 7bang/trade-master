@@ -3,6 +3,7 @@ import '../../models/transaction.dart';
 import '../../models/customer.dart';
 import '../../utils/formatters.dart';
 import 'receipt_styles.dart';
+import '../../config/on_colors.dart';
 
 /// 거래처 내역서 위젯
 class CustomerStatementWidget extends StatelessWidget {
@@ -112,7 +113,7 @@ class CustomerStatementWidget extends StatelessWidget {
               child: Text(
                 '※ 총 ${transactions.length}건 중 최근 $maxTransactions건만 표시',
                 style: ReceiptStyles.smallStyle.copyWith(
-                  color: Colors.red.shade700,
+                  color: OnColors.warning,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -200,7 +201,7 @@ class CustomerStatementWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: ReceiptStyles.lineSpacing),
                 const Text(
-                  '거래클립',
+                  '폰거래장 온',
                   style: ReceiptStyles.smallStyle,
                 ),
                 const SizedBox(height: ReceiptStyles.paddingSmall),

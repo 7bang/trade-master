@@ -6,6 +6,7 @@ import '../../providers/providers.dart';
 import '../../models/transaction.dart';
 import '../../models/product.dart';
 import '../../utils/formatters.dart';
+import '../../config/on_colors.dart';
 
 /// 여러 건 거래 입력 화면
 class MultiTransactionFormScreen extends ConsumerStatefulWidget {
@@ -75,7 +76,7 @@ class _MultiTransactionFormScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('거래 ${i + 1}의 입력값을 확인해주세요'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
         break;
@@ -135,7 +136,7 @@ class _MultiTransactionFormScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${_transactions.length}건의 거래가 저장되었습니다'),
-            backgroundColor: Colors.green,
+            backgroundColor: OnColors.success,
           ),
         );
         context.pop();
@@ -145,7 +146,7 @@ class _MultiTransactionFormScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('저장 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -199,16 +200,16 @@ class _MultiTransactionFormScreenState
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              color: Colors.blue.shade50,
+              color: OnColors.infoBg,
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade700),
+                  Icon(Icons.info_outline, color: OnColors.info),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '여러 건의 거래를 한 번에 입력할 수 있습니다',
                       style: TextStyle(
-                        color: Colors.blue.shade700,
+                        color: OnColors.info,
                         fontSize: 14,
                       ),
                     ),
@@ -235,15 +236,9 @@ class _MultiTransactionFormScreenState
             // 하단 버튼
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
+                border: Border(top: BorderSide(color: OnColors.line)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -302,11 +297,11 @@ class _MultiTransactionFormScreenState
             });
           },
           leading: CircleAvatar(
-            backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            backgroundColor: OnColors.paper,
             child: Text(
               '${index + 1}',
               style: TextStyle(
-                color: Theme.of(context).primaryColor,
+                color: OnColors.ink,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -320,14 +315,14 @@ class _MultiTransactionFormScreenState
               : Text(
                   '${item.selectedType == TransactionType.receivable ? "받을 돈" : "줄 돈"} • '
                   '${DateFormat('M/d').format(item.selectedDate)}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: OnColors.gray),
                 ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_transactions.length > 1)
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: const Icon(Icons.delete_outline, color: OnColors.danger),
                   onPressed: () => _removeTransaction(index),
                   tooltip: '삭제',
                 ),
@@ -356,12 +351,12 @@ class _MultiTransactionFormScreenState
                         ButtonSegment(
                           value: TransactionType.receivable,
                           label: Text('받을 돈'),
-                          icon: Icon(Icons.arrow_downward, color: Colors.green),
+                          icon: Icon(Icons.arrow_downward, color: OnColors.receivable),
                         ),
                         ButtonSegment(
                           value: TransactionType.payable,
                           label: Text('줄 돈'),
-                          icon: Icon(Icons.arrow_upward, color: Colors.red),
+                          icon: Icon(Icons.arrow_upward, color: OnColors.payable),
                         ),
                       ],
                       selected: {item.selectedType},
@@ -402,7 +397,7 @@ class _MultiTransactionFormScreenState
                       },
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: Colors.grey.shade300),
+                        side: BorderSide(color: OnColors.line),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -528,7 +523,7 @@ class _MultiTransactionFormScreenState
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: OnColors.paper,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -548,8 +543,8 @@ class _MultiTransactionFormScreenState
                                 fontWeight: FontWeight.bold,
                                 color: item.selectedType ==
                                         TransactionType.receivable
-                                    ? Colors.green.shade700
-                                    : Colors.red.shade700,
+                                    ? OnColors.receivable
+                                    : OnColors.payable,
                               ),
                             ),
                           ],

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../config/on_colors.dart';
 
 /// 영수증 및 내역서 공통 스타일
 class ReceiptStyles {
   // 색상
   static const Color backgroundColor = Colors.white;
-  static const Color primaryTextColor = Colors.black87;
-  static const Color secondaryTextColor = Colors.black54;
-  static const Color dividerColor = Colors.black26;
-  static final Color receivableColor = Colors.green.shade700;
-  static final Color payableColor = Colors.red.shade700;
+  static const Color primaryTextColor = OnColors.ink;
+  static const Color secondaryTextColor = OnColors.gray;
+  static const Color dividerColor = OnColors.line;
+  static const Color receivableColor = OnColors.receivable;
+  static const Color payableColor = OnColors.payable;
 
   // 폰트 크기
   static const double titleFontSize = 20.0;

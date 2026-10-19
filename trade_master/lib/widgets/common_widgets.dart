@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/on_colors.dart';
 
 /// 로딩 인디케이터
 class LoadingView extends StatelessWidget {
@@ -25,7 +26,7 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: OnColors.danger),
             const SizedBox(height: 16),
             Text(
               '에러가 발생했습니다',
@@ -35,7 +36,7 @@ class ErrorView extends StatelessWidget {
             Text(
               error.toString(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: OnColors.gray),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
@@ -77,18 +78,18 @@ class EmptyStateView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 80, color: Colors.grey.shade400),
+            Icon(icon, size: 80, color: OnColors.grayLight),
             const SizedBox(height: 16),
             Text(
               title,
-              style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 18, color: OnColors.gray),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 14, color: OnColors.gray),
               ),
             ],
             if (onAction != null && actionLabel != null) ...[
@@ -106,7 +107,7 @@ class EmptyStateView extends StatelessWidget {
   }
 }
 
-/// 거래처 잔액 색상 아바타 (양수=초록, 음수=빨강)
+/// 거래처 잔액 아바타 (받을 돈=황토, 줄 돈=남색 · 테두리 + 아이콘색)
 class BalanceAvatar extends StatelessWidget {
   final double balance;
   final IconData icon;
@@ -123,19 +124,15 @@ class BalanceAvatar extends StatelessWidget {
     final label = positive ? '받을 돈 있음' : '줄 돈 있음';
     return Semantics(
       label: label,
-      child: CircleAvatar(
-        backgroundColor:
-            positive ? Colors.green.shade100 : Colors.red.shade100,
-        child: Icon(
-          icon,
-          color: positive ? Colors.green.shade700 : Colors.red.shade700,
-        ),
+      child: _StatusCircle(
+        color: positive ? OnColors.receivable : OnColors.payable,
+        child: Icon(icon),
       ),
     );
   }
 }
 
-/// 거래 유형 아바타 (receivable=초록 아래화살표, payable=빨강 위화살표)
+/// 거래 유형 아바타 (받을 돈=황토 아래화살표, 줄 돈=남색 위화살표)
 class TransactionTypeAvatar extends StatelessWidget {
   final bool isReceivable;
 
@@ -145,13 +142,34 @@ class TransactionTypeAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: isReceivable ? '받을 돈' : '줄 돈',
-      child: CircleAvatar(
-        backgroundColor:
-            isReceivable ? Colors.green.shade100 : Colors.red.shade100,
-        child: Icon(
-          isReceivable ? Icons.arrow_downward : Icons.arrow_upward,
-          color: isReceivable ? Colors.green.shade700 : Colors.red.shade700,
-        ),
+      child: _StatusCircle(
+        color: isReceivable ? OnColors.receivable : OnColors.payable,
+        child: Icon(isReceivable ? Icons.arrow_downward : Icons.arrow_upward),
+      ),
+    );
+  }
+}
+
+/// 상태 원형 표시 — 배경 채움 대신 테두리 + 아이콘색 (BRAND_GUIDE 4.3, 햇빛 아래 가독성)
+class _StatusCircle extends StatelessWidget {
+  final Color color;
+  final Widget child;
+
+  const _StatusCircle({required this.color, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 2),
+      ),
+      child: IconTheme.merge(
+        data: IconThemeData(color: color, size: 22),
+        child: Center(child: child),
       ),
     );
   }

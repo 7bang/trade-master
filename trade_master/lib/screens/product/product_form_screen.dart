@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/product.dart';
+import '../../config/on_colors.dart';
 
 /// 품목 등록/수정 화면
 class ProductFormScreen extends ConsumerStatefulWidget {
@@ -80,7 +81,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('품목 정보 로드 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -144,7 +145,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('품목 정보가 수정되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -180,7 +181,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('품목이 등록되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -190,7 +191,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('저장 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -214,7 +215,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: OnColors.danger),
             child: const Text('삭제'),
           ),
         ],
@@ -234,7 +235,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('품목이 삭제되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -243,7 +244,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('삭제 실패: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: OnColors.danger,
             ),
           );
         }
@@ -278,7 +279,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 Icon(
                   _isEdit ? Icons.edit : Icons.add_box,
                   size: 64,
-                  color: Theme.of(context).primaryColor,
+                  color: OnColors.ink,
                 ),
                 const SizedBox(height: 16),
                 Text(

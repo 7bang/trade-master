@@ -10,6 +10,7 @@ import '../../widgets/receipts/trade_document_widget.dart';
 import '../../widgets/ai/collection_message_sheet.dart';
 import '../ai/ai_transaction_input_screen.dart';
 import '../document/trade_document_screen.dart';
+import '../../config/on_colors.dart';
 
 /// 거래처 상세 화면
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -58,7 +59,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             builder: (context) => AlertDialog(
               title: const Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange),
+                  Icon(Icons.warning, color: OnColors.warning),
                   SizedBox(width: 8),
                   Text('거래 건수 초과'),
                 ],
@@ -115,14 +116,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('내역서를 공유했습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('내역서 공유에 실패했습니다'),
-              backgroundColor: Colors.red,
+              backgroundColor: OnColors.danger,
             ),
           );
         }
@@ -133,7 +134,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('오류: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -246,9 +247,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, color: Colors.red),
+                    Icon(Icons.delete, color: OnColors.danger),
                     SizedBox(width: 8),
-                    Text('삭제', style: TextStyle(color: Colors.red)),
+                    Text('삭제', style: TextStyle(color: OnColors.danger)),
                   ],
                 ),
               ),
@@ -271,7 +272,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                     floating: false,
                     pinned: true,
                     automaticallyImplyLeading: false,
-                    backgroundColor: Theme.of(context).primaryColor,
+                    backgroundColor: OnColors.ink,
                     foregroundColor: Colors.white,
                     flexibleSpace: LayoutBuilder(
                       builder: (context, constraints) {
@@ -300,24 +301,15 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: customer.balance >= 0
-                                            ? Colors.green.shade200
-                                            : Colors.red.shade200,
+                                            ? OnColors.receivableOnDark
+                                            : OnColors.payableOnDark,
                                       ),
                                     ),
                                   ],
                                 )
                               : null,
                           background: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Theme.of(context).primaryColor,
-                                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                                ],
-                              ),
-                            ),
+                            color: OnColors.ink,
                             child: SafeArea(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -331,7 +323,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                         child: Icon(
                                           Icons.person,
                                           size: 36,
-                                          color: Theme.of(context).primaryColor,
+                                          color: OnColors.ink,
                                         ),
                                       ),
                                       const SizedBox(height: 12),
@@ -456,7 +448,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.blue.shade50,
+                                            color: OnColors.paper,
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           ),
@@ -464,7 +456,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                             transaction.product!.name,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.blue.shade700,
+                                              color: OnColors.gray,
                                             ),
                                           ),
                                         ),
@@ -484,7 +476,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                           transaction.memo!,
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade600,
+                                            color: OnColors.gray,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -500,8 +492,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                       fontWeight: FontWeight.bold,
                                       color: transaction.type ==
                                               models.TransactionType.receivable
-                                          ? Colors.green.shade700
-                                          : Colors.red.shade700,
+                                          ? OnColors.receivable
+                                          : OnColors.payable,
                                     ),
                                   ),
                                   onTap: () {
@@ -575,7 +567,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(Icons.error_outline, size: 64, color: OnColors.danger),
               const SizedBox(height: 16),
               Text('에러가 발생했습니다: $err'),
             ],
@@ -600,7 +592,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.receipt_long, color: Colors.blue),
+              leading: const Icon(Icons.receipt_long, color: OnColors.ink),
               title: const Text('단건 입력'),
               subtitle: const Text('거래를 1건 입력합니다'),
               onTap: () {
@@ -609,7 +601,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.library_add, color: Colors.green),
+              leading: const Icon(Icons.library_add, color: OnColors.ink),
               title: const Text('여러 건 입력'),
               subtitle: const Text('거래를 여러 건 한번에 입력합니다'),
               onTap: () {
@@ -618,7 +610,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.auto_awesome, color: Colors.deepPurple),
+              leading: const Icon(Icons.auto_awesome, color: OnColors.ink),
               title: const Text('AI 자동 입력'),
               subtitle: const Text('자연어 또는 사진으로 자동 입력합니다'),
               onTap: () {
@@ -654,7 +646,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: OnColors.danger),
             child: const Text('삭제'),
           ),
         ],
@@ -679,7 +671,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('거래처가 삭제되었습니다'),
-            backgroundColor: Colors.green,
+            backgroundColor: OnColors.success,
           ),
         );
       }
@@ -688,7 +680,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('삭제 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }

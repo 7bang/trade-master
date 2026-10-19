@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/brand_logo.dart';
 import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
+import '../../config/on_colors.dart';
 
 /// 거래처 목록 화면
 class CustomerListScreen extends ConsumerStatefulWidget {
@@ -23,7 +25,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _searchQuery.isEmpty
-            ? const Text('AI거래장인')
+            ? const BrandLogo.horizontal(height: 36)
             : Text('검색: $_searchQuery'),
         automaticallyImplyLeading: false,
         actions: [
@@ -85,20 +87,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: OnColors.ink,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Column(
                   children: [
@@ -160,7 +150,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                     Text(
                       '${customers.length}곳',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: OnColors.gray,
                       ),
                     ),
                   ],
@@ -202,15 +192,15 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: customer.balance >= 0
-                                    ? Colors.green.shade700
-                                    : Colors.red.shade700,
+                                    ? OnColors.receivable
+                                    : OnColors.payable,
                               ),
                             ),
                             Text(
                               Formatters.formatBalanceType(customer.balance),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: OnColors.gray,
                               ),
                             ),
                           ],

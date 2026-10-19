@@ -3,6 +3,7 @@ import '../../models/transaction.dart';
 import '../../models/customer.dart';
 import '../../utils/formatters.dart';
 import 'receipt_styles.dart';
+import '../../config/on_colors.dart';
 
 /// 개별 거래 영수증 위젯
 class TransactionReceiptWidget extends StatelessWidget {
@@ -151,7 +152,7 @@ class TransactionReceiptWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(ReceiptStyles.paddingSmall),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: OnColors.paper,
                 borderRadius:
                     BorderRadius.circular(ReceiptStyles.borderRadius / 2),
               ),
@@ -176,7 +177,7 @@ class TransactionReceiptWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: ReceiptStyles.lineSpacing),
                 const Text(
-                  '거래클립',
+                  '폰거래장 온',
                   style: ReceiptStyles.smallStyle,
                 ),
                 const SizedBox(height: ReceiptStyles.paddingSmall),

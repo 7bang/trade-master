@@ -6,6 +6,7 @@ import '../../models/customer.dart';
 import '../../providers/providers.dart';
 import '../../providers/ai_providers.dart';
 import '../../utils/formatters.dart';
+import '../../config/on_colors.dart';
 
 void showCollectionMessageSheet(
   BuildContext context,
@@ -102,7 +103,7 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: OnColors.line,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -112,7 +113,7 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
           // 헤더
           Row(
             children: [
-              const Icon(Icons.auto_awesome, color: Colors.deepPurple),
+              const Icon(Icons.auto_awesome, color: OnColors.ink),
               const SizedBox(width: 8),
               const Text(
                 'AI 미수금 독촉 문구',
@@ -123,8 +124,8 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: balance > 0
-                      ? Colors.green.shade50
-                      : Colors.red.shade50,
+                      ? OnColors.receivableBg
+                      : OnColors.payableBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -132,8 +133,8 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: balance > 0
-                        ? Colors.green.shade700
-                        : Colors.red.shade700,
+                        ? OnColors.receivable
+                        : OnColors.payable,
                   ),
                 ),
               ),
@@ -142,7 +143,7 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
           const SizedBox(height: 4),
           Text(
             widget.customer.name,
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: OnColors.gray),
           ),
           const SizedBox(height: 16),
 
@@ -165,11 +166,11 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Column(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.red.shade400, size: 40),
+                  Icon(Icons.error_outline, color: OnColors.danger, size: 40),
                   const SizedBox(height: 8),
                   Text(
                     _error!,
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(color: OnColors.danger),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -186,9 +187,9 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: OnColors.paper,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: OnColors.line),
               ),
               child: Text(
                 _message!,

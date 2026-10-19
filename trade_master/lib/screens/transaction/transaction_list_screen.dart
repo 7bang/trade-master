@@ -6,6 +6,7 @@ import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../ai/insight_screen.dart';
+import '../../config/on_colors.dart';
 
 /// 전체 거래내역 Provider (날짜 필터 지원)
 final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
@@ -182,13 +183,13 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                       horizontal: 16,
                       vertical: 8,
                     ),
-                    color: Colors.grey.shade100,
+                    color: OnColors.paper,
                     child: Text(
                       dateKey,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
+                        color: OnColors.gray,
                       ),
                     ),
                   ),
@@ -212,7 +213,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                               transaction.memo!,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: OnColors.gray,
                               ),
                             ),
                         ],
@@ -223,8 +224,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: transaction.type == TransactionType.receivable
-                              ? Colors.green.shade700
-                              : Colors.red.shade700,
+                              ? OnColors.receivable
+                              : OnColors.payable,
                         ),
                       ),
                       onTap: () {

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/brand_logo.dart';
 import '../../providers/providers.dart';
 import '../../utils/validators.dart';
+import '../../config/on_colors.dart';
 
 /// 회원가입 화면
 class SignupScreen extends ConsumerStatefulWidget {
@@ -51,7 +53,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -79,11 +81,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // 헤더
-                  Icon(
-                    Icons.person_add,
-                    size: 80,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                  const Center(child: BrandLogo.symbol(height: 72)),
                   const SizedBox(height: 16),
                   Text(
                     '계정 만들기',
@@ -94,10 +92,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'AI거래장인과 함께 시작하세요',
+                    '폰거래장 온과 함께 시작하세요',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
+                          color: OnColors.gray,
                         ),
                   ),
                   const SizedBox(height: 48),
@@ -213,9 +211,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: OnColors.infoBg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
+                      border: Border.all(color: OnColors.info),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,20 +221,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         Row(
                           children: [
                             Icon(Icons.info_outline,
-                                size: 20, color: Colors.blue.shade700),
+                                size: 20, color: OnColors.info),
                             const SizedBox(width: 8),
                             Text(
                               '가입 안내',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade700,
+                                color: OnColors.info,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          '회원가입 후 사업장 정보를 입력하면\n바로 거래클립을 사용할 수 있습니다.',
+                          '회원가입 후 사업장 정보를 입력하면\n바로 폰거래장 온을 사용할 수 있습니다.',
                           style: TextStyle(fontSize: 12),
                         ),
                       ],

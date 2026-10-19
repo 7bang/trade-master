@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>AI거래장인</string>
+	<string>폰거래장 온</string>
 	<key>NSCameraUsageDescription</key>
 	<string>영수증이나 거래 메모를 촬영해 AI로 거래 내용을 자동 입력하기 위해 카메라를 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

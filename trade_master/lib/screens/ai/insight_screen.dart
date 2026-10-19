@@ -6,6 +6,7 @@ import '../../providers/providers.dart';
 import '../../providers/ai_providers.dart';
 import '../../services/ai_service.dart';
 import '../../utils/formatters.dart';
+import '../../config/on_colors.dart';
 
 /// AI 경영 인사이트 화면
 class InsightScreen extends ConsumerStatefulWidget {
@@ -127,7 +128,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
             SizedBox(height: 8),
             Text(
               '잠시만 기다려주세요',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: OnColors.gray),
             ),
           ],
         ),
@@ -141,12 +142,12 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+              Icon(Icons.error_outline, size: 64, color: OnColors.danger),
               const SizedBox(height: 16),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.red.shade700),
+                style: TextStyle(color: OnColors.danger),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
@@ -169,7 +170,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
         // 헤더
         Row(
           children: [
-            const Icon(Icons.auto_awesome, color: Colors.deepPurple),
+            const Icon(Icons.auto_awesome, color: OnColors.ink),
             const SizedBox(width: 8),
             Text(
               'AI 분석 결과',
@@ -181,7 +182,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
             const Spacer(),
             Text(
               DateFormat('MM/dd HH:mm').format(DateTime.now()),
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+              style: TextStyle(color: OnColors.gray, fontSize: 12),
             ),
           ],
         ),
@@ -190,7 +191,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
         // 종합 요약
         _Section(
           icon: Icons.summarize,
-          color: Colors.blue,
+          color: OnColors.info,
           title: '종합 요약',
           child: Text(
             report.summary,
@@ -203,11 +204,11 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
         if (report.risks.isNotEmpty)
           _Section(
             icon: Icons.warning_amber_rounded,
-            color: Colors.orange,
+            color: OnColors.warning,
             title: '주의 사항',
             child: Column(
               children: report.risks
-                  .map((r) => _BulletItem(text: r, color: Colors.orange))
+                  .map((r) => _BulletItem(text: r, color: OnColors.warning))
                   .toList(),
             ),
           ),
@@ -217,11 +218,11 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
         if (report.recommendations.isNotEmpty)
           _Section(
             icon: Icons.lightbulb_outline,
-            color: Colors.green,
+            color: OnColors.success,
             title: '개선 권고사항',
             child: Column(
               children: report.recommendations
-                  .map((r) => _BulletItem(text: r, color: Colors.green))
+                  .map((r) => _BulletItem(text: r, color: OnColors.success))
                   .toList(),
             ),
           ),
@@ -230,7 +231,7 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
         Center(
           child: Text(
             'AI 분석은 참고용이며 실제 경영 판단은 직접 확인하세요',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+            style: TextStyle(color: OnColors.gray, fontSize: 11),
             textAlign: TextAlign.center,
           ),
         ),

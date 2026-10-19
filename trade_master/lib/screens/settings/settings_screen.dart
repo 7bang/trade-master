@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../widgets/brand_logo.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/providers.dart';
 import '../../services/supabase_service.dart';
+import '../../config/on_colors.dart';
 
 // 카카오 오픈채팅 문의 링크 — 실제 링크로 교체 필요
 const _kakaoOpenChatUrl = 'https://open.kakao.com/o/gRjICFyi';
@@ -96,10 +98,10 @@ class SettingsScreen extends ConsumerWidget {
 
           // 로그아웃
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
+            leading: const Icon(Icons.logout, color: OnColors.danger),
             title: const Text(
               '로그아웃',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: OnColors.danger),
             ),
             onTap: () async {
               final confirmed = await showDialog<bool>(
@@ -135,9 +137,10 @@ class SettingsScreen extends ConsumerWidget {
           ref.watch(_packageInfoProvider).when(
             data: (info) => AboutListTile(
               icon: const Icon(Icons.info),
-              applicationName: 'AI거래장인',
+              applicationName: '폰거래장 온',
+              applicationIcon: const BrandLogo.symbol(height: 48),
               applicationVersion: info.version,
-              applicationLegalese: '© 2025 AI거래장인',
+              applicationLegalese: '© 2025 폰거래장 온',
               child: const Text('앱 정보'),
             ),
             loading: () => const ListTile(
@@ -146,7 +149,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             error: (_, __) => const AboutListTile(
               icon: Icon(Icons.info),
-              applicationName: 'AI거래장인',
+              applicationName: '폰거래장 온',
               child: Text('앱 정보'),
             ),
           ),

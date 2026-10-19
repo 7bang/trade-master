@@ -7,6 +7,7 @@ import '../../models/transaction.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/transaction_receipt_widget.dart';
+import '../../config/on_colors.dart';
 
 /// 거래 상세 화면
 class TransactionDetailScreen extends ConsumerStatefulWidget {
@@ -69,14 +70,14 @@ class _TransactionDetailScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('영수증을 공유했습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('영수증 공유에 실패했습니다'),
-              backgroundColor: Colors.red,
+              backgroundColor: OnColors.danger,
             ),
           );
         }
@@ -87,7 +88,7 @@ class _TransactionDetailScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('오류: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -111,7 +112,7 @@ class _TransactionDetailScreenState
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: OnColors.danger),
             child: const Text('삭제'),
           ),
         ],
@@ -133,7 +134,7 @@ class _TransactionDetailScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('거래가 삭제되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -142,7 +143,7 @@ class _TransactionDetailScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('삭제 실패: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: OnColors.danger,
             ),
           );
         }
@@ -204,19 +205,7 @@ class _TransactionDetailScreenState
                 // 거래 유형 및 금액 헤더
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isReceivable
-                          ? [
-                              Colors.green.shade400,
-                              Colors.green.shade600,
-                            ]
-                          : [
-                              Colors.red.shade400,
-                              Colors.red.shade600,
-                            ],
-                    ),
-                  ),
+                  color: isReceivable ? OnColors.receivable : OnColors.payable,
                   child: Column(
                     children: [
                       Icon(
@@ -268,14 +257,14 @@ class _TransactionDetailScreenState
                             children: [
                               Icon(
                                 Icons.person,
-                                color: Theme.of(context).primaryColor,
+                                color: OnColors.ink,
                               ),
                               const SizedBox(width: 8),
                               const Text(
                                 '거래처',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey,
+                                  color: OnColors.gray,
                                 ),
                               ),
                             ],
@@ -302,7 +291,7 @@ class _TransactionDetailScreenState
                                   Icon(
                                     Icons.arrow_forward_ios,
                                     size: 16,
-                                    color: Colors.grey.shade400,
+                                    color: OnColors.grayLight,
                                   ),
                                 ],
                               ),
@@ -332,14 +321,14 @@ class _TransactionDetailScreenState
                               children: [
                                 Icon(
                                   Icons.inventory_2,
-                                  color: Theme.of(context).primaryColor,
+                                  color: OnColors.ink,
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
                                   '품목 정보',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey,
+                                    color: OnColors.gray,
                                   ),
                                 ),
                               ],
@@ -371,7 +360,7 @@ class _TransactionDetailScreenState
                                 valueStyle: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
+                                  color: OnColors.ink,
                                 ),
                               ),
                             ] else ...[
@@ -399,14 +388,14 @@ class _TransactionDetailScreenState
                               children: [
                                 Icon(
                                   Icons.note,
-                                  color: Theme.of(context).primaryColor,
+                                  color: OnColors.ink,
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
                                   '메모',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey,
+                                    color: OnColors.gray,
                                   ),
                                 ),
                               ],
@@ -427,7 +416,7 @@ class _TransactionDetailScreenState
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Card(
-                    color: Colors.grey.shade50,
+                    color: OnColors.paper,
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -506,7 +495,7 @@ class _DetailRow extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey.shade600,
+            color: OnColors.gray,
           ),
         ),
         Text(

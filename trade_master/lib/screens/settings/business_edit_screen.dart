@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/business.dart';
+import '../../config/on_colors.dart';
 
 /// 사업장 정보 수정 화면
 class BusinessEditScreen extends ConsumerStatefulWidget {
@@ -120,21 +121,21 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
                   children: [
                     // 안내 카드
                     Card(
-                      color: Colors.blue.shade50,
+                      color: OnColors.infoBg,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
                             Icon(
                               Icons.info_outline,
-                              color: Colors.blue.shade700,
+                              color: OnColors.info,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 '영수증과 내역서에 표시되는 사업장 정보입니다.',
                                 style: TextStyle(
-                                  color: Colors.blue.shade900,
+                                  color: OnColors.ink,
                                   fontSize: 14,
                                 ),
                               ),

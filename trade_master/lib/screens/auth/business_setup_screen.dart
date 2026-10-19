@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/business.dart';
+import '../../config/on_colors.dart';
 
 /// 사업장 정보 설정 화면
 ///
@@ -64,7 +65,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('사업장 정보가 저장되었습니다'),
-            backgroundColor: Colors.green,
+            backgroundColor: OnColors.success,
           ),
         );
 
@@ -76,7 +77,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -108,7 +109,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
                   Icon(
                     Icons.store,
                     size: 80,
-                    color: Theme.of(context).primaryColor,
+                    color: OnColors.ink,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -123,7 +124,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
                     '나중에 설정에서 변경할 수 있습니다',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
+                          color: OnColors.gray,
                         ),
                   ),
                   const SizedBox(height: 48),
@@ -189,9 +190,9 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50,
+                      color: OnColors.successBg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.shade200),
+                      border: Border.all(color: OnColors.success),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,13 +200,13 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
                         Row(
                           children: [
                             Icon(Icons.check_circle_outline,
-                                size: 20, color: Colors.green.shade700),
+                                size: 20, color: OnColors.success),
                             const SizedBox(width: 8),
                             Text(
                               '거의 다 왔습니다!',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                color: OnColors.success,
                               ),
                             ),
                           ],

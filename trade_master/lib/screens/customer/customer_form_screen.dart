@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../models/customer.dart';
+import '../../config/on_colors.dart';
 
 /// 거래처 등록/수정 화면
 class CustomerFormScreen extends ConsumerStatefulWidget {
@@ -50,7 +51,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('거래처 정보 로드 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -102,7 +103,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('거래처 정보가 수정되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -134,7 +135,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('거래처가 등록되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -144,7 +145,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('저장 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -173,7 +174,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
                 Icon(
                   _isEdit ? Icons.edit : Icons.person_add,
                   size: 64,
-                  color: Theme.of(context).primaryColor,
+                  color: OnColors.ink,
                 ),
                 const SizedBox(height: 16),
                 Text(

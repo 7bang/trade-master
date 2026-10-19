@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../config/on_colors.dart';
+import '../../widgets/brand_logo.dart';
 import '../../providers/providers.dart';
 import '../../utils/validators.dart';
 
@@ -47,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -71,26 +73,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 로고
-                  Icon(
-                    Icons.account_balance_wallet,
-                    size: 80,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                  // 로고 (세로형)
+                  const Center(child: BrandLogo.vertical(height: 150)),
                   const SizedBox(height: 16),
                   Text(
-                    'AI거래장인',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '소상공인을 위한 거래장 관리',
+                    '종이 거래장 그대로, 폰 안에 온전히',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
+                          color: OnColors.gray,
                         ),
                   ),
                   const SizedBox(height: 48),

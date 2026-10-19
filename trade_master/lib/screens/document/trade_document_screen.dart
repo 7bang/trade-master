@@ -4,6 +4,7 @@ import '../../models/customer.dart';
 import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/receipts/trade_document_widget.dart';
+import '../../config/on_colors.dart';
 
 /// 견적서 / 납품서 작성 화면 (품목 입력 → 미리보기 → 이미지 공유)
 class TradeDocumentScreen extends ConsumerStatefulWidget {
@@ -69,7 +70,7 @@ class _TradeDocumentScreenState extends ConsumerState<TradeDocumentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$title 공유에 실패했습니다'),
-          backgroundColor: Colors.red,
+          backgroundColor: OnColors.danger,
         ),
       );
     }
@@ -200,7 +201,7 @@ class _TradeDocumentScreenState extends ConsumerState<TradeDocumentScreen> {
       children: [
         Expanded(
           child: Container(
-            color: Colors.grey.shade200,
+            color: OnColors.line,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Center(
@@ -312,7 +313,7 @@ class _ItemEditor extends StatelessWidget {
                 IconButton(
                   onPressed: onRemove,
                   icon: const Icon(Icons.remove_circle_outline,
-                      color: Colors.red, size: 20),
+                      color: OnColors.danger, size: 20),
                 ),
             ],
           ),

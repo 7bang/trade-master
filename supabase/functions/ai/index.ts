@@ -1,4 +1,4 @@
-// AI proxy for the TradeClip app.
+// AI proxy for the 폰거래장 온 app.
 // The Claude API key lives only here (secret CLAUDE_API_KEY); the app never sees it.
 // Prompts are built server-side so the endpoint can't be used as a free general-purpose LLM.
 import Anthropic from "npm:@anthropic-ai/sdk@0.131.0";

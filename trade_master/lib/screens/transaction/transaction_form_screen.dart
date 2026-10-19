@@ -8,6 +8,7 @@ import '../../models/product.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/ai_service.dart';
+import '../../config/on_colors.dart';
 
 /// 거래 입력/수정 화면
 class TransactionFormScreen extends ConsumerStatefulWidget {
@@ -91,7 +92,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('거래 정보 로드 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -124,7 +125,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('품목을 선택하세요'),
-          backgroundColor: Colors.red,
+          backgroundColor: OnColors.danger,
         ),
       );
       return;
@@ -177,7 +178,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('거래 정보가 수정되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -216,7 +217,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('거래가 등록되었습니다'),
-              backgroundColor: Colors.green,
+              backgroundColor: OnColors.success,
             ),
           );
         }
@@ -226,7 +227,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('저장 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: OnColors.danger,
           ),
         );
       }
@@ -273,14 +274,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   children: [
                     // 거래처 정보
                     Card(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: OnColors.paper,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
                             Icon(
                               Icons.person,
-                              color: Theme.of(context).primaryColor,
+                              color: OnColors.ink,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -299,7 +300,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                     '현재 잔액: ${Formatters.formatCurrency(customer.balance)} (${Formatters.formatBalanceType(customer.balance)})',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.grey.shade600,
+                                      color: OnColors.gray,
                                     ),
                                   ),
                                 ],
@@ -414,7 +415,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         loading: () => const LinearProgressIndicator(),
                         error: (err, stack) => Text(
                           '품목 로드 실패: ${err.toString()}',
-                          style: const TextStyle(color: Colors.red),
+                          style: const TextStyle(color: OnColors.danger),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -479,7 +480,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                          color: OnColors.paper,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -497,7 +498,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).primaryColor,
+                                color: OnColors.ink,
                               ),
                             ),
                           ],

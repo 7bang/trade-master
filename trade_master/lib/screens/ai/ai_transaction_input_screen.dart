@@ -6,6 +6,7 @@ import '../../providers/ai_providers.dart';
 import '../../services/ai_service.dart';
 import '../../utils/formatters.dart';
 import '../transaction/transaction_form_screen.dart';
+import '../../config/on_colors.dart';
 
 /// AI를 이용한 거래 입력 화면 (자연어 + 사진)
 class AiTransactionInputScreen extends ConsumerStatefulWidget {
@@ -197,7 +198,7 @@ class _TextInputTab extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '예: "사과 30개 5만원 받을 돈" 또는 "어제 감자 100kg 구매 120,000원"',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            style: TextStyle(color: OnColors.gray, fontSize: 13),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -241,7 +242,7 @@ class _PhotoInputTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long, size: 80, color: Colors.grey.shade400),
+          Icon(Icons.receipt_long, size: 80, color: OnColors.grayLight),
           const SizedBox(height: 16),
           const Text(
             '영수증이나 메모 사진을 찍어주세요',
@@ -251,7 +252,7 @@ class _PhotoInputTab extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'AI가 금액·품목·날짜를 자동으로 읽어냅니다',
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: OnColors.gray),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -289,7 +290,7 @@ class _LoadingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.deepPurple.shade50,
+      color: OnColors.infoBg,
       padding: const EdgeInsets.all(16),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -317,16 +318,16 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.red.shade50,
+      color: OnColors.dangerBg,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red.shade700),
+          Icon(Icons.error_outline, color: OnColors.danger),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               error,
-              style: TextStyle(color: Colors.red.shade700),
+              style: TextStyle(color: OnColors.danger),
             ),
           ),
           TextButton(onPressed: onRetry, child: const Text('닫기')),
@@ -353,14 +354,7 @@ class _ResultCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        border: const Border(top: BorderSide(color: OnColors.line)),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -369,7 +363,7 @@ class _ResultCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              const Icon(Icons.check_circle, color: OnColors.success, size: 20),
               const SizedBox(width: 6),
               const Text(
                 'AI 분석 결과',
@@ -417,7 +411,7 @@ class _Row extends StatelessWidget {
             width: 72,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(color: OnColors.gray, fontSize: 13),
             ),
           ),
           Expanded(
