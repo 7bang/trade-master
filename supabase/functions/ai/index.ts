@@ -74,15 +74,53 @@ const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 const today = () =>
   new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }); // YYYY-MM-DD
 
+// ── Usage log (ops report: AI 사용량·비용·실패 집계) ──────────────────────
+type Meter = { model: string | null; inputTokens: number; outputTokens: number };
+
+async function logUsage(row: {
+  user_id: string | null;
+  task: string;
+  status: number;
+  duration_ms: number;
+  meter: Meter;
+}) {
+  try {
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/ai_usage_logs`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        user_id: row.user_id,
+        task: row.task,
+        status: row.status,
+        duration_ms: row.duration_ms,
+        model: row.meter.model,
+        input_tokens: row.meter.inputTokens,
+        output_tokens: row.meter.outputTokens,
+      }),
+    });
+    if (!res.ok) console.error("ai_usage_logs insert failed:", res.status, await res.text());
+  } catch (error) {
+    console.error("ai_usage_logs insert error:", error);
+  }
+}
+
 // ── Claude call ───────────────────────────────────────────────────────────
 type Content = string | Array<Record<string, unknown>>;
 
 async function callClaude(opts: {
   model: string;
   content: Content;
+  meter: Meter;
   schema?: Record<string, unknown>;
   maxTokens?: number;
 }): Promise<string> {
+  opts.meter.model = opts.model;
   const outputConfig: Record<string, unknown> = { effort: "low" };
   if (opts.schema) {
     outputConfig.format = { type: "json_schema", schema: opts.schema };
@@ -104,6 +142,9 @@ async function callClaude(opts: {
   try {
     // deno-lint-ignore no-explicit-any
     const response: any = await anthropic.beta.messages.create(params as any);
+    opts.meter.model = response.model ?? opts.model;
+    opts.meter.inputTokens += response.usage?.input_tokens ?? 0;
+    opts.meter.outputTokens += response.usage?.output_tokens ?? 0;
 
     if (response.stop_reason === "refusal") {
       throw new HttpError(422, "AI가 이 요청을 처리할 수 없습니다. 내용을 바꿔 다시 시도해주세요.");
@@ -171,9 +212,10 @@ const insightSchema = {
 };
 
 // ── Tasks ─────────────────────────────────────────────────────────────────
-async function parseText(input: Record<string, unknown>) {
+async function parseText(input: Record<string, unknown>, meter: Meter) {
   const text = str(input.text, "입력 내용");
   const result = await callClaude({
+    meter,
     model: TEXT_MODEL,
     schema: transactionSchema,
     content: `사용자 입력을 거래 정보로 파싱해주세요.
@@ -192,7 +234,7 @@ async function parseText(input: Record<string, unknown>) {
   return JSON.parse(result);
 }
 
-async function parseImage(input: Record<string, unknown>) {
+async function parseImage(input: Record<string, unknown>, meter: Meter) {
   const mediaType = str(input.mediaType, "이미지 형식", 20);
   if (!ALLOWED_IMAGE_TYPES.includes(mediaType)) {
     throw new HttpError(400, "지원하지 않는 이미지 형식입니다. JPG·PNG·GIF·WEBP 사진을 사용해주세요.");
@@ -200,6 +242,7 @@ async function parseImage(input: Record<string, unknown>) {
   const data = str(input.imageBase64, "이미지", MAX_IMAGE_BASE64_LENGTH);
 
   const result = await callClaude({
+    meter,
     model: VISION_MODEL,
     schema: transactionSchema,
     content: [
@@ -222,11 +265,12 @@ async function parseImage(input: Record<string, unknown>) {
   return JSON.parse(result);
 }
 
-async function insights(input: Record<string, unknown>) {
+async function insights(input: Record<string, unknown>, meter: Meter) {
   const topCustomers = typeof input.topCustomers === "string"
     ? input.topCustomers.slice(0, 1000)
     : "없음";
   const result = await callClaude({
+    meter,
     model: TEXT_MODEL,
     schema: insightSchema,
     content: `소상공인 거래 데이터를 분석해서 경영 인사이트를 제공해주세요.
@@ -244,7 +288,7 @@ summary는 전체 경영 상황 요약 2-3문장, risks는 위험 요소 2개 �
   return JSON.parse(result);
 }
 
-async function collectionMessage(input: Record<string, unknown>) {
+async function collectionMessage(input: Record<string, unknown>, meter: Meter) {
   const customerName = str(input.customerName, "거래처명", 100);
   const balance = num(input.balance, "미수금액");
   if (balance <= 0) throw new HttpError(400, "받을 미수금이 없는 거래처입니다.");
@@ -255,6 +299,7 @@ async function collectionMessage(input: Record<string, unknown>) {
   const signature = businessPhone ? `${businessName} (${businessPhone})` : businessName;
 
   const text = await callClaude({
+    meter,
     model: TEXT_MODEL,
     content: `소상공인이 거래처에게 보낼 미수금 입금 요청 메시지를 작성해주세요.
 카카오톡으로 보내기 좋은 짧고 정중한 톤으로, 메시지 본문만 응답하세요.
@@ -272,7 +317,10 @@ async function collectionMessage(input: Record<string, unknown>) {
   return { text };
 }
 
-const tasks: Record<string, (input: Record<string, unknown>) => Promise<unknown>> = {
+const tasks: Record<
+  string,
+  (input: Record<string, unknown>, meter: Meter) => Promise<unknown>
+> = {
   parse_text: parseText,
   parse_image: parseImage,
   insights,
@@ -284,18 +332,42 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
+  const startedAt = Date.now();
+  const meter: Meter = { model: null, inputTokens: 0, outputTokens: 0 };
+  let userId: string | null = null;
+  let task: string | null = null;
+  let status = 200;
+
   try {
-    await requireUser(req);
+    userId = await requireUser(req);
 
     const body = await req.json().catch(() => null);
     const handler = tasks[body?.task];
     if (!handler) throw new HttpError(400, "알 수 없는 AI 요청입니다.");
+    task = body.task as string;
 
-    const result = await handler(body.input ?? {});
+    const result = await handler(body.input ?? {}, meter);
     return json({ result });
   } catch (error) {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+      status = error.status;
+      return json({ error: error.message }, error.status);
+    }
+    status = 500;
     console.error("Unhandled AI function error:", error);
     return json({ error: "AI 처리 중 오류가 발생했습니다. 다시 시도해주세요." }, 500);
+  } finally {
+    // 로그인 사용자의 유효한 작업만 기록 (응답은 기다리지 않음)
+    if (userId && task) {
+      const pending = logUsage({
+        user_id: userId,
+        task,
+        status,
+        duration_ms: Date.now() - startedAt,
+        meter,
+      });
+      // deno-lint-ignore no-explicit-any
+      (globalThis as any).EdgeRuntime?.waitUntil?.(pending);
+    }
   }
 });

@@ -213,6 +213,22 @@ supabase secrets list
 
 ---
 
+## Ops Report (라즈베리파이 → 텔레그램)
+
+라즈베리파이가 12시간마다 DB 함수 `stats.trade_report()`의 결과(완성된 리포트 문장)를 텔레그램으로 보낸다.
+
+| 구성 | 위치 |
+|---|---|
+| 리포트 함수 | `stats.trade_report()` — migration `20261018041002`(최초), `20261019000000`(🤖 AI·🖥 서버 항목 추가) |
+| 접속 계정 | DB 로그인 롤 `stats_reader` — `stats` 스키마 사용 + 이 함수 실행 권한만 있음 (비밀번호는 git에 없음) |
+| AI 사용 기록 | `public.ai_usage_logs` — `ai` Edge Function이 호출마다 기록 (RLS 정책 없음 = 앱에서 접근 불가) |
+
+- 리포트 항목을 바꿀 때는 새 migration에서 `create or replace function stats.trade_report()` 전체를 다시 정의하고, 끝에 `grant execute ... to stats_reader` 유지
+- AI 모델·가격이 바뀌면 함수 안 비용 계산(CASE) 단가도 함께 수정
+- 원격 DB에 SQL Editor로 직접 적용하면 migration 기록이 어긋나 `db push`가 막힌다 → 항상 migration 파일 + `supabase db push`
+
+---
+
 ## Supabase Dashboard Configuration
 
 ### Required Settings
