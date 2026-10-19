@@ -6,6 +6,7 @@ import '../../models/product.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 /// 품목 등록/수정 화면
 class ProductFormScreen extends ConsumerStatefulWidget {
@@ -80,12 +81,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     }
   }
@@ -143,12 +139,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
         if (mounted) {
           context.go('/products');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('품목 정보가 수정되었습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('품목 정보가 수정되었습니다');
         }
       } else {
         // 등록
@@ -179,22 +170,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
         if (mounted) {
           context.go('/products');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('품목이 등록되었습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('품목이 등록되었습니다');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     } finally {
       if (mounted) {
@@ -233,21 +214,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
         if (mounted) {
           context.go('/products');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('품목이 삭제되었습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('품목이 삭제되었습니다');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(userMessage(e)),
-              backgroundColor: OnColors.danger,
-            ),
-          );
+          context.showError(e);
         }
       }
     }

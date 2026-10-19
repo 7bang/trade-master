@@ -5,7 +5,7 @@ import '../../config/on_colors.dart';
 import '../../widgets/brand_logo.dart';
 import '../../providers/providers.dart';
 import '../../utils/validators.dart';
-import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 /// 로그인 화면
 class LoginScreen extends ConsumerStatefulWidget {
@@ -47,12 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     } finally {
       if (mounted) {

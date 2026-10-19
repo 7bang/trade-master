@@ -6,6 +6,7 @@ import '../../models/business.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 /// 사업장 정보 설정 화면
 ///
@@ -64,24 +65,14 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
 
       if (mounted) {
         // 성공 메시지
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('사업장 정보가 저장되었습니다'),
-            backgroundColor: OnColors.success,
-          ),
-        );
+        context.showSuccess('사업장 정보가 저장되었습니다');
 
         // 거래처 목록 화면으로 이동
         context.go('/customers');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     } finally {
       if (mounted) {

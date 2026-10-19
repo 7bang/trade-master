@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/receipts/trade_document_widget.dart';
 import '../../config/on_colors.dart';
+import '../../utils/snackbars.dart';
 
 /// 견적서 / 납품서 작성 화면 (품목 입력 → 미리보기 → 이미지 공유)
 class TradeDocumentScreen extends ConsumerStatefulWidget {
@@ -47,9 +48,7 @@ class _TradeDocumentScreenState extends ConsumerState<TradeDocumentScreen> {
             ))
         .toList();
     if (items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('품목명과 수량을 하나 이상 입력해주세요')),
-      );
+      context.showInfo('품목명과 수량을 하나 이상 입력해주세요');
       return;
     }
     setState(() => _previewItems = items);
@@ -67,12 +66,7 @@ class _TradeDocumentScreenState extends ConsumerState<TradeDocumentScreen> {
     if (!mounted) return;
     setState(() => _isSharing = false);
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$title 공유에 실패했습니다'),
-          backgroundColor: OnColors.danger,
-        ),
-      );
+      context.showError('$title 공유에 실패했습니다');
     }
   }
 

@@ -6,6 +6,7 @@ import '../../models/customer.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 /// 거래처 등록/수정 화면
 class CustomerFormScreen extends ConsumerStatefulWidget {
@@ -50,12 +51,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     }
   }
@@ -101,12 +97,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
 
         if (mounted) {
           context.go('/customers/${widget.customerId}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('거래처 정보가 수정되었습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('거래처 정보가 수정되었습니다');
         }
       } else {
         // 등록
@@ -133,22 +124,12 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
 
         if (mounted) {
           context.go('/customers');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('거래처가 등록되었습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('거래처가 등록되었습니다');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     } finally {
       if (mounted) {

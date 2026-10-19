@@ -9,7 +9,7 @@ import '../../widgets/common_widgets.dart';
 import '../../widgets/receipts/transaction_receipt_widget.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
-import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 /// 거래 상세 화면
 class TransactionDetailScreen extends ConsumerStatefulWidget {
@@ -36,9 +36,7 @@ class _TransactionDetailScreenState
       final business = await ref.read(currentBusinessProvider.future);
       if (business == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('사업장 정보를 불러올 수 없습니다')),
-          );
+          context.showInfo('사업장 정보를 불러올 수 없습니다');
         }
         return;
       }
@@ -67,30 +65,15 @@ class _TransactionDetailScreenState
         Navigator.pop(context); // 로딩 대화상자 닫기
 
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('영수증을 공유했습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('영수증을 공유했습니다');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('영수증 공유에 실패했습니다'),
-              backgroundColor: OnColors.danger,
-            ),
-          );
+          context.showError('영수증 공유에 실패했습니다');
         }
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // 로딩 대화상자 닫기
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-          ),
-        );
+        context.showError(e);
       }
     }
   }
@@ -129,21 +112,11 @@ class _TransactionDetailScreenState
 
         if (context.mounted) {
           context.go('/customers/${transaction.customerId}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('거래가 삭제되었습니다'),
-              backgroundColor: OnColors.success,
-            ),
-          );
+          context.showSuccess('거래가 삭제되었습니다');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(userMessage(e)),
-              backgroundColor: OnColors.danger,
-            ),
-          );
+          context.showError(e);
         }
       }
     }

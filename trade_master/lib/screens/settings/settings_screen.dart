@@ -6,8 +6,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/providers.dart';
 import '../../providers/data_refresh.dart';
-import '../../utils/app_exception.dart';
 import '../../config/on_colors.dart';
+import '../../utils/snackbars.dart';
 
 // 카카오 오픈채팅 문의 링크 — 실제 링크로 교체 필요
 const _kakaoOpenChatUrl = 'https://open.kakao.com/o/gRjICFyi';
@@ -18,9 +18,7 @@ Future<void> _launchKakaoChat(BuildContext context) async {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   } else {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('카카오톡을 열 수 없습니다')),
-      );
+      context.showInfo('카카오톡을 열 수 없습니다');
     }
   }
 }
@@ -128,12 +126,7 @@ class SettingsScreen extends ConsumerWidget {
                   await ref.read(supabaseServiceProvider).signOut();
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(userMessage(e)),
-                        backgroundColor: OnColors.danger,
-                      ),
-                    );
+                    context.showError(e);
                   }
                   return;
                 }

@@ -10,6 +10,7 @@ import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
 import '../../providers/transaction_pages.dart';
+import '../../utils/snackbars.dart';
 
 /// 전체 거래내역 화면
 class TransactionListScreen extends ConsumerStatefulWidget {
@@ -34,9 +35,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       data: (customers) async {
         if (customers.isEmpty) {
           if (context.mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('먼저 거래처를 등록해주세요')));
+            context.showInfo('먼저 거래처를 등록해주세요');
           }
           return;
         }
@@ -79,14 +78,10 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         }
       },
       loading: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('거래처 목록을 불러오는 중...')));
+        context.showInfo('거래처 목록을 불러오는 중...');
       },
       error: (error, _) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessage(error))));
+        context.showInfo(userMessage(error));
       },
     );
   }

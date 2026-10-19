@@ -8,6 +8,7 @@ import '../../providers/ai_providers.dart';
 import '../../utils/formatters.dart';
 import '../../config/on_colors.dart';
 import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 void showCollectionMessageSheet(
   BuildContext context,
@@ -204,9 +205,7 @@ class _CollectionMessageSheetState extends State<_CollectionMessageSheet> {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: _message!));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('클립보드에 복사했습니다')),
-                      );
+                      context.showInfo('클립보드에 복사했습니다');
                     },
                     icon: const Icon(Icons.copy),
                     label: const Text('복사'),

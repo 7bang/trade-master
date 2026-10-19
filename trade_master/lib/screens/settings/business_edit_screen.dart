@@ -6,6 +6,7 @@ import '../../models/business.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
+import '../../utils/snackbars.dart';
 
 /// 사업장 정보 수정 화면
 class BusinessEditScreen extends ConsumerStatefulWidget {
@@ -52,9 +53,7 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(userMessage(e))),
-        );
+        context.showInfo(userMessage(e));
       }
     }
   }
@@ -81,9 +80,7 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
       ref.refreshBusiness();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('사업장 정보가 수정되었습니다')),
-        );
+        context.showInfo('사업장 정보가 수정되었습니다');
         context.pop();
       }
     } catch (e) {
@@ -91,9 +88,7 @@ class _BusinessEditScreenState extends ConsumerState<BusinessEditScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(userMessage(e))),
-        );
+        context.showInfo(userMessage(e));
       }
     }
   }

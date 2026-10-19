@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../providers/providers.dart';
-import '../../models/transaction.dart';
-import '../../models/product.dart';
-import '../../utils/formatters.dart';
 import '../../config/on_colors.dart';
+import '../../models/product.dart';
+import '../../models/transaction.dart';
 import '../../providers/data_refresh.dart';
+import '../../providers/providers.dart';
 import '../../utils/app_exception.dart';
+import '../../utils/formatters.dart';
+import '../../utils/snackbars.dart';
+import '../../widgets/common_widgets.dart';
+import '../../widgets/transaction_entry_fields.dart';
 
 /// 여러 건 거래 입력 화면
 class MultiTransactionFormScreen extends ConsumerStatefulWidget {
@@ -24,152 +27,85 @@ class MultiTransactionFormScreen extends ConsumerStatefulWidget {
       _MultiTransactionFormScreenState();
 }
 
+/// 카드 한 장 = 거래 한 건
+class _Item {
+  final formKey = GlobalKey<FormState>();
+  final entry = TransactionEntry();
+  bool isExpanded = true;
+}
+
 class _MultiTransactionFormScreenState
     extends ConsumerState<MultiTransactionFormScreen> {
-  final List<TransactionItem> _transactions = [];
+  final List<_Item> _items = [_Item()];
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    // 첫 번째 거래 항목 추가
-    _addTransaction();
-  }
+  void _addItem() => setState(() => _items.add(_Item()));
 
-  void _addTransaction() {
-    setState(() {
-      _transactions.add(TransactionItem());
-    });
-  }
-
-  void _removeTransaction(int index) {
-    if (_transactions.length > 1) {
-      setState(() {
-        _transactions[index].dispose();
-        _transactions.removeAt(index);
-      });
-    }
-  }
-
-  Future<void> _saveAll() async {
-    // 이미 로딩 중이면 중복 실행 방지
-    if (_isLoading) return;
-
-    // 검증을 위해 모든 항목 펼치기 (Form이 빌드되어야 validate 가능)
-    setState(() {
-      for (var item in _transactions) {
-        item.isExpanded = true;
-      }
-    });
-
-    // setState 후 다음 프레임까지 대기 — Form 빌드 완료 보장
-    await WidgetsBinding.instance.endOfFrame;
-
-    // 모든 항목 검증
-    bool allValid = true;
-    for (var i = 0; i < _transactions.length; i++) {
-      final currentState = _transactions[i].formKey.currentState;
-
-      // Form이 아직 빌드되지 않았으면 건너뛰기
-      if (currentState == null) continue;
-
-      if (!currentState.validate()) {
-        allValid = false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('거래 ${i + 1}의 입력값을 확인해주세요'),
-            backgroundColor: OnColors.danger,
-          ),
-        );
-        break;
-      }
-    }
-
-    if (!allValid) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final service = ref.read(supabaseServiceProvider);
-      final businessAsync = ref.read(currentBusinessProvider);
-
-      // AsyncValue에서 business 가져오기
-      final business = businessAsync.maybeWhen(
-        data: (data) => data,
-        orElse: () => null,
-      );
-
-      if (business == null) {
-        throw AppException('사업장 정보를 찾을 수 없습니다');
-      }
-
-      // 모든 거래를 단일 INSERT로 저장 (원자성 보장)
-      final now = DateTime.now();
-      final transactionsList = _transactions.map((item) {
-        return Transaction(
-          id: '',
-          businessId: business.id,
-          customerId: widget.customerId,
-          type: item.selectedType,
-          amount: item.calculateAmount(),
-          date: item.selectedDate,
-          productId: item.useProductMode ? item.selectedProduct?.id : null,
-          quantity: item.useProductMode
-              ? double.tryParse(item.quantityController.text.trim())
-              : null,
-          unitPrice: item.useProductMode
-              ? double.tryParse(item.unitPriceController.text.trim())
-              : null,
-          memo: item.memoController.text.trim().isEmpty
-              ? null
-              : item.memoController.text.trim(),
-          createdAt: now,
-          updatedAt: now,
-        );
-      }).toList();
-
-      await service.createTransactionsBatch(transactionsList);
-
-      // Provider 갱신
-      ref.refreshTransactions();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${_transactions.length}건의 거래가 저장되었습니다'),
-            backgroundColor: OnColors.success,
-          ),
-        );
-        context.pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userMessage(e)),
-            backgroundColor: OnColors.danger,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+  void _removeItem(int index) {
+    if (_items.length <= 1) return;
+    setState(() => _items.removeAt(index).entry.dispose());
   }
 
   @override
   void dispose() {
-    for (var item in _transactions) {
-      item.dispose();
+    for (final item in _items) {
+      item.entry.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _saveAll() async {
+    if (_isLoading) return;
+
+    // 검증하려면 모든 카드의 Form이 화면에 있어야 한다 → 펼친 뒤 한 프레임 기다림
+    setState(() {
+      for (final item in _items) {
+        item.isExpanded = true;
+      }
+    });
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    for (var i = 0; i < _items.length; i++) {
+      final form = _items[i].formKey.currentState;
+      if (form != null && !form.validate()) {
+        context.showError('거래 ${i + 1}의 입력값을 확인해주세요');
+        return;
+      }
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final business = await ref.read(currentBusinessProvider.future);
+      if (business == null) {
+        throw const AppException('사업장 정보를 찾을 수 없습니다');
+      }
+
+      // 모든 거래를 단일 INSERT로 저장 (원자성 보장)
+      await ref.read(supabaseServiceProvider).createTransactionsBatch([
+        for (final item in _items)
+          item.entry.toNewTransaction(
+            businessId: business.id,
+            customerId: widget.customerId,
+          ),
+      ]);
+      ref.refreshTransactions();
+
+      if (mounted) {
+        context.showSuccess('${_items.length}건의 거래가 저장되었습니다');
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) context.showError(e);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
+    final saveLabel = '전체 저장 (${_items.length}건)';
 
     return Scaffold(
       appBar: AppBar(
@@ -177,131 +113,102 @@ class _MultiTransactionFormScreenState
         actions: [
           TextButton.icon(
             onPressed: _isLoading ? null : _saveAll,
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.save, color: Colors.white),
-            label: Text(
-              '전체 저장 (${_transactions.length}건)',
-              style: const TextStyle(color: Colors.white),
-            ),
+            icon: const Icon(Icons.save),
+            label: Text(saveLabel),
           ),
         ],
       ),
       body: productsAsync.when(
         data: (products) => Column(
           children: [
-            // 안내 메시지
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               color: OnColors.infoBg,
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.info_outline, color: OnColors.info),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '여러 건의 거래를 한 번에 입력할 수 있습니다',
-                      style: TextStyle(
-                        color: OnColors.info,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: OnColors.info, fontSize: 15),
                     ),
                   ),
                 ],
               ),
             ),
-
-            // 거래 목록
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: _transactions.length,
-                itemBuilder: (context, index) {
-                  return _buildTransactionCard(
-                    index,
-                    _transactions[index],
-                    products,
-                  );
-                },
+                itemCount: _items.length,
+                itemBuilder: (context, index) =>
+                    _buildCard(index, _items[index], products),
               ),
             ),
-
-            // 하단 버튼
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(top: BorderSide(color: OnColors.line)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _addTransaction,
-                    icon: const Icon(Icons.add),
-                    label: const Text('거래 추가'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _addItem,
+                      icon: const Icon(Icons.add),
+                      label: const Text('거래 추가'),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _saveAll,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _saveAll,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('$saveLabel하기'),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text('전체 저장하기 (${_transactions.length}건)'),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text(userMessage(err))),
+        loading: () => const LoadingView(),
+        error: (err, _) => ErrorView(error: err),
       ),
     );
   }
 
-  Widget _buildTransactionCard(
-    int index,
-    TransactionItem item,
-    List<Product> products,
-  ) {
+  Widget _buildCard(int index, _Item item, List<Product> products) {
+    final entry = item.entry;
+    final summary = '${entry.type == TransactionType.receivable ? '받을 돈' : '줄 돈'} · '
+        '${DateFormat('M/d').format(entry.date)}'
+        '${entry.amount > 0 ? ' · ${Formatters.formatCurrency(entry.amount)}' : ''}';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          key: PageStorageKey('transaction_$index'),
+          key: ObjectKey(item),
           initiallyExpanded: item.isExpanded,
-          onExpansionChanged: (expanded) {
-            setState(() {
-              item.isExpanded = expanded;
-            });
-          },
+          onExpansionChanged: (expanded) =>
+              setState(() => item.isExpanded = expanded),
           leading: CircleAvatar(
             backgroundColor: OnColors.paper,
             child: Text(
               '${index + 1}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: OnColors.ink,
                 fontWeight: FontWeight.bold,
               ),
@@ -313,18 +220,14 @@ class _MultiTransactionFormScreenState
           ),
           subtitle: item.isExpanded
               ? null
-              : Text(
-                  '${item.selectedType == TransactionType.receivable ? "받을 돈" : "줄 돈"} • '
-                  '${DateFormat('M/d').format(item.selectedDate)}',
-                  style: TextStyle(fontSize: 12, color: OnColors.gray),
-                ),
+              : Text(summary, style: const TextStyle(color: OnColors.gray)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_transactions.length > 1)
+              if (_items.length > 1)
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: OnColors.danger),
-                  onPressed: () => _removeTransaction(index),
+                  onPressed: () => _removeItem(index),
                   tooltip: '삭제',
                 ),
               const Icon(Icons.expand_more),
@@ -335,257 +238,10 @@ class _MultiTransactionFormScreenState
               padding: const EdgeInsets.all(16),
               child: Form(
                 key: item.formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 받을돈/줄돈 선택
-                    const Text(
-                      '거래 유형',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SegmentedButton<TransactionType>(
-                      segments: const [
-                        ButtonSegment(
-                          value: TransactionType.receivable,
-                          label: Text('받을 돈'),
-                          icon: Icon(Icons.arrow_downward, color: OnColors.receivable),
-                        ),
-                        ButtonSegment(
-                          value: TransactionType.payable,
-                          label: Text('줄 돈'),
-                          icon: Icon(Icons.arrow_upward, color: OnColors.payable),
-                        ),
-                      ],
-                      selected: {item.selectedType},
-                      onSelectionChanged: (Set<TransactionType> selected) {
-                        setState(() {
-                          item.selectedType = selected.first;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // 날짜 선택
-                    const Text(
-                      '거래 날짜',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.calendar_today),
-                      title: Text(Formatters.formatDate(item.selectedDate)),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: item.selectedDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (date != null) {
-                          setState(() {
-                            item.selectedDate = date;
-                          });
-                        }
-                      },
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: OnColors.line),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // 품목/직접입력 모드 선택
-                    Row(
-                      children: [
-                        const Text(
-                          '입력 방식',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const Spacer(),
-                        SegmentedButton<bool>(
-                          segments: const [
-                            ButtonSegment(
-                              value: false,
-                              label: Text('직접 입력'),
-                            ),
-                            ButtonSegment(
-                              value: true,
-                              label: Text('품목 선택'),
-                            ),
-                          ],
-                          selected: {item.useProductMode},
-                          onSelectionChanged: (Set<bool> selected) {
-                            setState(() {
-                              item.useProductMode = selected.first;
-                              if (!item.useProductMode) {
-                                item.selectedProduct = null;
-                              }
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 품목 선택 모드
-                    if (item.useProductMode) ...[
-                      // 품목 선택
-                      DropdownButtonFormField<Product>(
-                        initialValue: item.selectedProduct,
-                        decoration: const InputDecoration(
-                          labelText: '품목',
-                          hintText: '품목을 선택하세요',
-                        ),
-                        items: products.map((product) {
-                          return DropdownMenuItem(
-                            value: product,
-                            child: Text(product.name),
-                          );
-                        }).toList(),
-                        onChanged: (product) {
-                          setState(() {
-                            item.selectedProduct = product;
-                            if (product != null && product.defaultUnitPrice != null) {
-                              item.unitPriceController.text =
-                                  product.defaultUnitPrice.toString();
-                            }
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return '품목을 선택해주세요';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 수량
-                      TextFormField(
-                        controller: item.quantityController,
-                        decoration: const InputDecoration(
-                          labelText: '수량',
-                          hintText: '예: 10',
-                          suffix: Text('개'),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return '수량을 입력해주세요';
-                          }
-                          if (double.tryParse(value.trim()) == null) {
-                            return '올바른 숫자를 입력해주세요';
-                          }
-                          return null;
-                        },
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 단가
-                      TextFormField(
-                        controller: item.unitPriceController,
-                        decoration: const InputDecoration(
-                          labelText: '단가',
-                          hintText: '예: 5000',
-                          suffix: Text('원'),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return '단가를 입력해주세요';
-                          }
-                          if (double.tryParse(value.trim()) == null) {
-                            return '올바른 숫자를 입력해주세요';
-                          }
-                          return null;
-                        },
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 계산된 금액 표시
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: OnColors.paper,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              '총 금액',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              Formatters.formatCurrency(item.calculateAmount()),
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: item.selectedType ==
-                                        TransactionType.receivable
-                                    ? OnColors.receivable
-                                    : OnColors.payable,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ] else ...[
-                      // 직접 입력 모드
-                      TextFormField(
-                        controller: item.amountController,
-                        decoration: const InputDecoration(
-                          labelText: '금액',
-                          hintText: '예: 50000',
-                          suffix: Text('원'),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return '금액을 입력해주세요';
-                          }
-                          if (double.tryParse(value.trim()) == null) {
-                            return '올바른 숫자를 입력해주세요';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-
-                    // 메모
-                    TextFormField(
-                      controller: item.memoController,
-                      decoration: const InputDecoration(
-                        labelText: '메모 (선택사항)',
-                        hintText: '거래 내용을 메모하세요',
-                      ),
-                      maxLines: 2,
-                    ),
-                  ],
+                child: TransactionEntryFields(
+                  entry: entry,
+                  products: products,
+                  onChanged: () => setState(() {}),
                 ),
               ),
             ),
@@ -593,37 +249,5 @@ class _MultiTransactionFormScreenState
         ),
       ),
     );
-  }
-}
-
-/// 거래 항목 데이터 클래스
-class TransactionItem {
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController quantityController = TextEditingController();
-  final TextEditingController unitPriceController = TextEditingController();
-  final TextEditingController amountController = TextEditingController();
-  final TextEditingController memoController = TextEditingController();
-
-  TransactionType selectedType = TransactionType.receivable;
-  Product? selectedProduct;
-  DateTime selectedDate = DateTime.now();
-  bool useProductMode = false;
-  bool isExpanded = true;
-
-  double calculateAmount() {
-    if (!useProductMode) {
-      return double.tryParse(amountController.text.trim()) ?? 0;
-    }
-
-    final quantity = double.tryParse(quantityController.text.trim()) ?? 0;
-    final unitPrice = double.tryParse(unitPriceController.text.trim()) ?? 0;
-    return quantity * unitPrice;
-  }
-
-  void dispose() {
-    quantityController.dispose();
-    unitPriceController.dispose();
-    amountController.dispose();
-    memoController.dispose();
   }
 }
