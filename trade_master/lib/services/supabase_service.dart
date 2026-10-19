@@ -4,6 +4,7 @@ import '../models/customer.dart';
 import '../models/product.dart';
 import '../models/transaction.dart';
 import '../models/transaction_summary.dart';
+import '../models/db_columns.dart';
 import '../utils/app_exception.dart';
 
 class SupabaseService {
@@ -62,10 +63,7 @@ class SupabaseService {
 
   Future<Business> createBusiness(Business business) async {
     try {
-      final data = business.toJson();
-      data.remove('id');
-      data.remove('created_at');
-      data.remove('updated_at');
+      final data = business.toInsertJson();
 
       final response = await _client
           .from('businesses')
@@ -82,7 +80,7 @@ class SupabaseService {
     try {
       await _client
           .from('businesses')
-          .update(business.toJson())
+          .update(business.toUpdateJson())
           .eq('id', business.id);
     } catch (e) {
       throw AppException.from(e, '사업장 수정');
@@ -126,11 +124,7 @@ class SupabaseService {
       throw AppException('거래처명을 입력해주세요');
     }
     try {
-      final data = customer.toJson();
-      data.remove('id');
-      data.remove('created_at');
-      data.remove('updated_at');
-      data.remove('balance');
+      final data = customer.toInsertJson();
 
       final response = await _client
           .from('customers')
@@ -148,11 +142,7 @@ class SupabaseService {
       throw AppException('거래처명을 입력해주세요');
     }
     try {
-      // DB에 없는 칸(balance: 조회용 잔액)과 바꾸면 안 되는 값은 제외
-      final data = customer.toJson();
-      data.remove('id');
-      data.remove('created_at');
-      data.remove('balance');
+      final data = customer.toUpdateJson();
 
       await _client
           .from('customers')
@@ -214,10 +204,7 @@ class SupabaseService {
       throw AppException('단위를 입력해주세요');
     }
     try {
-      final data = product.toJson();
-      data.remove('id');
-      data.remove('created_at');
-      data.remove('updated_at');
+      final data = product.toInsertJson();
 
       final response = await _client
           .from('products')
@@ -234,7 +221,7 @@ class SupabaseService {
     try {
       await _client
           .from('products')
-          .update(product.toJson())
+          .update(product.toUpdateJson())
           .eq('id', product.id);
     } catch (e) {
       throw AppException.from(e, '품목 수정');
@@ -318,12 +305,7 @@ class SupabaseService {
       throw AppException('금액은 0보다 커야 합니다');
     }
     try {
-      final data = transaction.toJson();
-      data.remove('id');
-      data.remove('created_at');
-      data.remove('updated_at');
-      data.remove('customer');
-      data.remove('product');
+      final data = transaction.toInsertJson();
 
       final response = await _client
           .from('transactions')
@@ -348,15 +330,7 @@ class SupabaseService {
       }
     }
     try {
-      final dataList = transactions.map((transaction) {
-        final data = transaction.toJson();
-        data.remove('id');
-        data.remove('created_at');
-        data.remove('updated_at');
-        data.remove('customer');
-        data.remove('product');
-        return data;
-      }).toList();
+      final dataList = transactions.map((t) => t.toInsertJson()).toList();
 
       final response = await _client
           .from('transactions')
@@ -373,12 +347,7 @@ class SupabaseService {
 
   Future<void> updateTransaction(Transaction transaction) async {
     try {
-      // DB에 없는 칸(customer, product: 조회 시 붙는 연관 정보)과 바꾸면 안 되는 값은 제외
-      final data = transaction.toJson();
-      data.remove('id');
-      data.remove('created_at');
-      data.remove('customer');
-      data.remove('product');
+      final data = transaction.toUpdateJson();
 
       await _client
           .from('transactions')
