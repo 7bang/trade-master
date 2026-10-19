@@ -213,6 +213,26 @@ supabase secrets list
 
 ---
 
+## Code Conventions (앱)
+
+새 코드도 아래 공용 방식을 쓴다 (2026-10-19 리팩토링, 상세: `todo-refactor.md`).
+
+| 상황 | 쓰는 것 | 위치 |
+|---|---|---|
+| 서비스에서 실패 | `throw AppException.from(e, '거래처 수정')` | `lib/utils/app_exception.dart` |
+| 화면에 오류 문구 | `userMessage(e)` — `e.toString()` 금지 | 〃 |
+| 하단 알림 | `context.showSuccess / showError / showInfo` | `lib/utils/snackbars.dart` |
+| 데이터 변경 후 새로고침 | `ref.refreshTransactions / refreshCustomers / refreshProducts / refreshBusiness / refreshAll` — `ref.invalidate` 직접 나열 금지 | `lib/providers/data_refresh.dart` |
+| DB 저장 | `model.toInsertJson()` / `toUpdateJson()` — `toJson()` 그대로 보내기 금지 | `lib/models/db_columns.dart` |
+| 거래 목록 | `transactionPagesProvider(TransactionQuery(...))` 50건씩 + `LoadMoreFooter` | `lib/providers/transaction_pages.dart` |
+| 거래 합계·건수 | `getTransactionSummary()` (DB 함수) — 목록을 더하지 말 것 | `lib/services/supabase_service.dart` |
+| 거래 입력 칸 | `TransactionEntry` + `TransactionEntryFields` | `lib/widgets/transaction_entry_fields.dart` |
+
+- 테이블 칸을 바꾸면 `db_columns.dart`와 `test/db_columns_test.dart`의 스키마 목록을 함께 수정
+- 커밋 전: `flutter analyze` 0건, `flutter test` 통과
+
+---
+
 ## Ops Report (라즈베리파이 → 텔레그램)
 
 라즈베리파이가 12시간마다 DB 함수 `stats.trade_report()`의 결과(완성된 리포트 문장)를 텔레그램으로 보낸다.

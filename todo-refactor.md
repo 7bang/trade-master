@@ -43,19 +43,19 @@
 - 해결: "거래 변경", "거래처 변경", "품목 변경", "사업장 변경" 갱신 함수로 한 곳에 모음
 
 ### ⑥ 저장 시 DB에 없는 칸 제외 로직이 함수마다 흩어짐
-- [ ] 해결
+- [x] 해결 (2026-10-19)
 - 위치: `supabase_service.dart`의 create/update 함수들 (`data.remove(...)` 반복)
 - 문제: 2026-10-19 거래처·거래 수정 오류(`balance`, `customer`, `product` 전송)의 근본 원인
 - 해결: 모델별로 DB 전송용 변환(`toDbJson`)을 한 곳에 정의하고, 테이블 컬럼과 일치하는지 테스트
 
 ### ⑦ 반복 코드
-- [ ] 알림(SnackBar) 44곳 → 완료/오류 알림 함수로 통일
-- [ ] 품목 입력 칸 3중복 (거래 입력, 다건 거래 입력, 견적서·납품서) → 공용 위젯
+- [x] 알림(SnackBar) 44곳 → 완료/오류 알림 함수로 통일
+- [x] 품목 입력 칸 중복 → 거래 입력·다건 거래 입력을 공용 위젯으로 (견적서·납품서는 자유 입력 구조라 별도 유지)
 
 ### ⑧ 큰 화면 파일 분리
-- [ ] `customer_detail_screen.dart` (689줄)
-- [ ] `multi_transaction_form_screen.dart` (628줄)
-- [ ] `transaction_form_screen.dart` (612줄)
+- [x] `customer_detail_screen.dart` (689줄 → 417줄 + sections 275줄)
+- [x] `multi_transaction_form_screen.dart` (628줄 → 253줄)
+- [x] `transaction_form_screen.dart` (612줄 → 219줄)
 
 ### 기타 구조
 - [x] `SupabaseService()`를 Provider 없이 직접 생성하는 곳 정리 (`main.dart` 라우터, 설정 화면 로그아웃)
@@ -64,15 +64,16 @@
 
 ## 3순위 — 청소
 
-- [ ] 쓰지 않는 패키지 `screenshot` 삭제 (`pubspec.yaml`)
-- [ ] 쓰지 않는 함수 `ShareService.shareMultipleWidgets` 삭제
-- [ ] 분석 경고 23건 정리
+- [x] 쓰지 않는 패키지 `screenshot` 삭제 (`pubspec.yaml`)
+- [x] 쓰지 않는 함수 `ShareService.shareMultipleWidgets` 삭제
+- [x] 분석 경고 23건 정리 → **0건**
   - 18건: freezed 모델의 `@JsonKey` 표기(`invalid_annotation_target`)
   - ~~4건: `await_only_futures`~~ (1번 묶음에서 해결) / 1건: `use_build_context_synchronously`
-- [ ] 테스트 보강
-  - 모델 → DB 전송 칸이 테이블 컬럼과 일치하는지 (⑥)
+- [x] 테스트 보강 (17 → 45개)
+  - [x] 모델 → DB 전송 칸이 테이블 컬럼과 일치하는지 (⑥) — `test/db_columns_test.dart`
   - [x] 오류 문구 변환 (④) — `test/app_exception_test.dart`
-  - 데이터 변경 시 갱신 대상 (⑤)
+  - [ ] 데이터 변경 시 갱신 대상 (⑤) — Supabase 초기화가 필요해 보류
+  - [x] 거래 입력 상태 계산·변환 — `test/transaction_entry_test.dart`
 
 ---
 
@@ -83,6 +84,7 @@
 | 2026-10-19 | — | 점검 및 목록 작성 |
 | 2026-10-19 | 1번 | ①③④⑤ 완료 — 아래 상세 |
 | 2026-10-19 | 2번 | ② 완료 — 아래 상세 |
+| 2026-10-19 | 3번 | ⑥⑦⑧ + 청소 완료 — 아래 상세 |
 
 ### 1번 묶음 상세 (2026-10-19)
 
@@ -105,3 +107,13 @@
 - **AI 경영 인사이트**: 이번 달 합계를 DB 함수로 계산
   - 덤으로 해결: `isAfter(1일)` 때문에 **매월 1일 거래가 이번 달 합계에서 빠지던 버그**
 - 테스트: `test/transaction_summary_test.dart` (6케이스)
+
+### 3번 묶음 상세 (2026-10-19)
+
+- **⑥ 저장 칸 허용 목록**: `lib/models/db_columns.dart` — 테이블별로 보낼 칸만 고르는 `toInsertJson()` / `toUpdateJson()`. 서비스 9곳의 `data.remove(...)` 제거. `test/db_columns_test.dart`가 DB 스키마 스냅샷과 비교
+- **⑦ 알림**: `lib/utils/snackbars.dart` — `context.showSuccess / showError / showInfo`, 44곳 교체
+- **⑦ 거래 입력 공용 위젯**: `lib/widgets/transaction_entry_fields.dart` (`TransactionEntry` + `TransactionEntryFields`)
+  - 함께 맞춘 차이: 다건 입력의 수량 단위가 항상 "개"이던 것 → 품목 단위, 다건 입력이 0·음수를 통과시키던 것 → 0보다 큰 수만
+  - 다건 입력: 상단 "전체 저장" 버튼이 흰 글자라 한지색 상단 바에서 안 보이던 문제(리브랜딩 후) 수정, 사업장 로딩 중 저장 실패하던 문제 수정
+- **⑧ 큰 화면 분리**: 거래처 상세 → `customer_detail_sections.dart`(상단 잔액 헤더, 거래 목록)
+- **청소**: `screenshot` 패키지·`shareMultipleWidgets` 삭제, freezed `@JsonKey` 경고는 `analysis_options.yaml`에서 끔(freezed 공식 안내), `use_build_context_synchronously` 수정 → 분석 경고 0건
