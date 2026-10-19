@@ -14,10 +14,10 @@
 - 해결: 데이터 변경 시 함께 갱신(⑤), 당겨서 새로고침 추가
 
 ### ② 거래 1,000건 초과 시 조용히 잘림
-- [ ] 해결
+- [x] 해결 (2026-10-19)
 - 위치: `lib/services/supabase_service.dart` `getTransactions()` `.limit(1000)`, `lib/screens/ai/insight_screen.dart`
 - 증상: 거래내역 목록에서 오래된 거래가 안내 없이 빠짐, AI 경영 인사이트의 이번 달 매출·매입 합계가 틀려짐
-- 시점: 라네즈 주 200건 이상 입력 → 약 한 달 뒤 도달
+- 시점: 점검 당시 가장 많은 사업장이 **이미 2,170건** (이번 달 468건) → 거래내역 탭에서 1,170건이 빠진 상태였음
 - 해결: 목록은 페이지 단위로 나눠 불러오기, 합계는 DB 함수(RPC)에서 계산
 
 ### ③ 화면 이동마다 서버 조회 + 네트워크 오류 시 사업장 등록 화면으로 이동
@@ -82,6 +82,7 @@
 |---|---|---|
 | 2026-10-19 | — | 점검 및 목록 작성 |
 | 2026-10-19 | 1번 | ①③④⑤ 완료 — 아래 상세 |
+| 2026-10-19 | 2번 | ② 완료 — 아래 상세 |
 
 ### 1번 묶음 상세 (2026-10-19)
 
@@ -93,3 +94,14 @@
 - **④ 오류 문구**: `lib/utils/app_exception.dart` — 서비스 31곳이 `AppException.from(e, '작업 이름')`으로 던지고 화면 31곳은 `userMessage(e)`로 표시. 로그인 오류는 코드별 한국어 문구
 - 로그아웃: Provider 경유 + 이전 사용자 캐시 비우기
 - 공유(내역서·영수증): 데이터 로딩 중이면 기다린 뒤 공유 (`.value` → `.future`)
+
+### 2번 묶음 상세 (2026-10-19)
+
+- **DB 함수** `get_transaction_summary(p_business_id, p_customer_id, p_start, p_end)` — 받을 돈·줄 돈 합계, 건수, 첫/마지막 거래일. 사업장 소유자 확인 (migration `20261020000000`)
+- **목록 50건씩**: `lib/providers/transaction_pages.dart` `transactionPagesProvider(TransactionQuery)` — 거래내역 탭(사업장 전체)과 거래처 상세(거래처별)가 함께 사용, 목록 끝에 닿으면 `LoadMoreFooter`가 다음 페이지 요청
+  - 서비스 `getTransactions(limit, offset)` — `limit(1000)` 제거, `id`까지 정렬해 페이지 경계 중복·누락 방지
+  - 기존 `transactionsProvider`, `allTransactionsProvider`, `DateFilter` 삭제
+- **내역서**: `statementDataProvider` — 최근 50건 + DB 합계. 합계·잔액·조회 기간은 전체 거래 기준 (기존에는 받은 목록을 더해 1,000건 넘으면 틀림)
+- **AI 경영 인사이트**: 이번 달 합계를 DB 함수로 계산
+  - 덤으로 해결: `isAfter(1일)` 때문에 **매월 1일 거래가 이번 달 합계에서 빠지던 버그**
+- 테스트: `test/transaction_summary_test.dart` (6케이스)
