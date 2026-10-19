@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../models/transaction.dart';
 import '../../providers/providers.dart';
 import '../../providers/ai_providers.dart';
 import '../../services/ai_service.dart';
@@ -48,16 +47,13 @@ class _InsightScreenState extends ConsumerState<InsightScreen> {
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
 
-      final allTx = await service.getTransactions(businessId: business.id);
-      final monthlyTx = allTx.where((t) => t.date.isAfter(monthStart)).toList();
-
-      final monthlyReceivable = monthlyTx
-          .where((t) => t.type == TransactionType.receivable)
-          .fold<double>(0, (s, t) => s + t.amount);
-
-      final monthlyPayable = monthlyTx
-          .where((t) => t.type == TransactionType.payable)
-          .fold<double>(0, (s, t) => s + t.amount);
+      // 이번 달(1일 포함) 합계는 DB에서 계산 — 거래 수와 관계없이 정확
+      final monthly = await service.getTransactionSummary(
+        businessId: business.id,
+        startDate: monthStart,
+      );
+      final monthlyReceivable = monthly.receivableTotal;
+      final monthlyPayable = monthly.payableTotal;
 
       // 잔액 기준 상위 5 거래처
       final sorted = [...customers]

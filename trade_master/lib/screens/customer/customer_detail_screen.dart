@@ -13,6 +13,7 @@ import '../document/trade_document_screen.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
+import '../../providers/transaction_pages.dart';
 
 /// 거래처 상세 화면
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -37,8 +38,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       // 아직 불러오는 중이어도 끝날 때까지 기다린다 (.value는 로딩 중 null)
       final customer =
           await ref.read(customerProvider(widget.customerId).future);
-      final transactions =
-          await ref.read(transactionsProvider(widget.customerId).future);
+      final statement =
+          await ref.read(statementDataProvider(widget.customerId).future);
       final business = await ref.read(currentBusinessProvider.future);
 
       if (business == null) {
@@ -50,9 +51,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         return;
       }
 
-      // 50건 초과 시 경고
-      const maxTransactions = 50;
-      if (transactions.length > maxTransactions) {
+      // 최근 50건만 담기므로 그보다 많으면 안내 (합계는 전체 기준)
+      if (statement.isLimited) {
         if (mounted) {
           final confirmed = await showDialog<bool>(
             context: context,
@@ -65,9 +65,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 ],
               ),
               content: Text(
-                '거래 내역이 ${transactions.length}건입니다.\n\n'
-                '이미지 공유는 최근 $maxTransactions건만 표시됩니다.\n'
-                '전체 내역은 추후 PDF 기능을 이용해주세요.\n\n'
+                '거래 내역이 ${statement.summary.count}건입니다.\n\n'
+                '이미지에는 최근 ${StatementData.statementMaxRows}건만 표시되고,\n'
+                '합계와 잔액은 전체 거래 기준입니다.\n\n'
                 '계속하시겠습니까?',
               ),
               actions: [
@@ -144,7 +144,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final customerAsync = ref.watch(customerProvider(widget.customerId));
-    final transactionsAsync = ref.watch(transactionsProvider(widget.customerId));
+    final transactionsAsync = ref.watch(
+        transactionPagesProvider(TransactionQuery(customerId: widget.customerId)));
+    final statementAsync = ref.watch(statementDataProvider(widget.customerId));
 
     return Scaffold(
       appBar: AppBar(
@@ -406,7 +408,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
 
                   // 거래 목록
                   transactionsAsync.when(
-                    data: (transactions) {
+                    data: (page) {
+                      final transactions = page.items;
                       if (transactions.isEmpty) {
                         return SliverFillRemaining(
                           child: EmptyStateView(
@@ -424,6 +427,17 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
+                              // 끝에 "더 불러오기" 한 칸 (50건씩 이어서 불러옴)
+                              if (index == transactions.length) {
+                                return LoadMoreFooter(
+                                  error: page.loadMoreError,
+                                  onLoadMore: () => ref
+                                      .read(transactionPagesProvider(TransactionQuery(
+                                              customerId: widget.customerId))
+                                          .notifier)
+                                      .loadMore(),
+                                );
+                              }
                               final transaction = transactions[index];
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 8),
@@ -502,7 +516,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                 ),
                               );
                             },
-                            childCount: transactions.length,
+                            childCount:
+                                transactions.length + (page.hasMore ? 1 : 0),
                           ),
                         ),
                       );
@@ -523,30 +538,19 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
               Positioned(
                 left: -10000,
                 top: 0,
-                child: transactionsAsync.when(
-                  data: (transactions) {
+                child: statementAsync.when(
+                  data: (statement) {
                     return businessAsync.when(
                       data: (business) {
                         if (business == null) {
                           return const SizedBox.shrink();
                         }
 
-                        // 전체 거래 내역 기간 계산
-                        DateTime startDate = DateTime.now();
-                        DateTime endDate = DateTime.now();
-
-                        if (transactions.isNotEmpty) {
-                          startDate = transactions.last.date;
-                          endDate = transactions.first.date;
-                        }
-
                         return RepaintBoundary(
                           key: _statementKey,
                           child: CustomerStatementWidget(
                             customer: customer,
-                            transactions: transactions,
-                            startDate: startDate,
-                            endDate: endDate,
+                            statement: statement,
                             businessName: business.name,
                           ),
                         );
@@ -569,7 +573,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             children: [
               const Icon(Icons.error_outline, size: 64, color: OnColors.danger),
               const SizedBox(height: 16),
-              Text('에러가 발생했습니다: $err'),
+              Text(userMessage(err)),
             ],
           ),
         ),

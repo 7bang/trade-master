@@ -175,3 +175,51 @@ class _StatusCircle extends StatelessWidget {
     );
   }
 }
+
+/// 목록 끝 표시 — 화면에 나타나면 다음 페이지를 불러온다.
+/// 불러오기에 실패하면 문구와 "다시 시도"를 보여준다.
+class LoadMoreFooter extends StatefulWidget {
+  final VoidCallback onLoadMore;
+  final String? error;
+
+  const LoadMoreFooter({super.key, required this.onLoadMore, this.error});
+
+  @override
+  State<LoadMoreFooter> createState() => _LoadMoreFooterState();
+}
+
+class _LoadMoreFooterState extends State<LoadMoreFooter> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onLoadMore();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final error = widget.error;
+    if (error != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(error, textAlign: TextAlign.center, style: const TextStyle(color: OnColors.gray)),
+            TextButton.icon(
+              onPressed: widget.onLoadMore,
+              icon: const Icon(Icons.refresh),
+              label: const Text('다시 시도'),
+            ),
+          ],
+        ),
+      );
+    }
+    return const Padding(
+      padding: EdgeInsets.all(24),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}

@@ -6,6 +6,7 @@ import '../models/business.dart';
 import '../models/customer.dart';
 import '../models/product.dart';
 import '../models/transaction.dart';
+import '../models/transaction_summary.dart';
 
 // ========== 서비스 Providers ==========
 
@@ -88,15 +89,7 @@ final productProvider = FutureProvider.family<Product, String>(
 );
 
 // ========== 거래 Providers ==========
-
-/// 거래 목록 Provider (거래처별)
-final transactionsProvider = FutureProvider.family<List<Transaction>, String>(
-  (ref, customerId) async {
-    ref.keepAlive();
-    final service = ref.watch(supabaseServiceProvider);
-    return service.getTransactions(customerId: customerId);
-  },
-);
+// 거래 목록(페이지 단위)은 transaction_pages.dart 의 transactionPagesProvider
 
 /// 특정 거래 Provider
 final transactionProvider = FutureProvider.family<Transaction, String>(
@@ -107,35 +100,35 @@ final transactionProvider = FutureProvider.family<Transaction, String>(
   },
 );
 
-/// 전체 거래내역 Provider (날짜 필터 지원)
-final allTransactionsProvider = FutureProvider.family<List<Transaction>, DateFilter>((ref, filter) async {
-  final service = ref.watch(supabaseServiceProvider);
-  final business = await ref.watch(currentBusinessProvider.future);
+/// 거래처 내역서 데이터: 최근 거래 [statementMaxRows]건 + 전체 합계(DB 계산)
+class StatementData {
+  static const statementMaxRows = 50;
 
-  if (business == null) return [];
+  final List<Transaction> recent;
+  final TransactionSummary summary;
 
-  return await service.getTransactions(
-    businessId: business.id,
-    startDate: filter.startDate,
-    endDate: filter.endDate,
-  );
-});
+  const StatementData({required this.recent, required this.summary});
 
-/// 날짜 필터 클래스
-class DateFilter {
-  final DateTime? startDate;
-  final DateTime? endDate;
-
-  const DateFilter({this.startDate, this.endDate});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DateFilter &&
-          runtimeType == other.runtimeType &&
-          startDate == other.startDate &&
-          endDate == other.endDate;
-
-  @override
-  int get hashCode => startDate.hashCode ^ endDate.hashCode;
+  bool get isLimited => summary.count > recent.length;
 }
+
+final statementDataProvider = FutureProvider.family<StatementData, String>(
+  (ref, customerId) async {
+    final service = ref.watch(supabaseServiceProvider);
+    final customer = await ref.watch(customerProvider(customerId).future);
+    final results = await Future.wait([
+      service.getTransactions(
+        customerId: customerId,
+        limit: StatementData.statementMaxRows,
+      ),
+      service.getTransactionSummary(
+        businessId: customer.businessId,
+        customerId: customerId,
+      ),
+    ]);
+    return StatementData(
+      recent: results[0] as List<Transaction>,
+      summary: results[1] as TransactionSummary,
+    );
+  },
+);

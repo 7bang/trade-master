@@ -3,6 +3,7 @@ import '../models/business.dart';
 import '../models/customer.dart';
 import '../models/product.dart';
 import '../models/transaction.dart';
+import '../models/transaction_summary.dart';
 import '../utils/app_exception.dart';
 
 class SupabaseService {
@@ -253,11 +254,15 @@ class SupabaseService {
 
   // ========== 거래 ==========
 
+  /// 거래 목록 한 페이지 ([offset]부터 [limit]건, 최신순).
+  /// 전체 합계가 필요하면 목록을 더하지 말고 [getTransactionSummary]를 쓴다.
   Future<List<Transaction>> getTransactions({
     String? customerId,
     String? businessId,
     DateTime? startDate,
     DateTime? endDate,
+    int limit = 50,
+    int offset = 0,
   }) async {
     try {
       var query = _client
@@ -280,10 +285,12 @@ class SupabaseService {
       // 삭제된 거래 제외
       query = query.isFilter('deleted_at', null);
 
+      // id까지 정렬해야 같은 날짜·시각 거래가 페이지 사이에서 겹치거나 빠지지 않는다
       final response = await query
           .order('date', ascending: false)
           .order('created_at', ascending: false)
-          .limit(1000);
+          .order('id', ascending: false)
+          .range(offset, offset + limit - 1);
 
       return (response as List)
           .map((json) => Transaction.fromJson(json as Map<String, dynamic>))
@@ -424,6 +431,31 @@ class SupabaseService {
       return (response as num).toDouble();
     } catch (e) {
       throw AppException.from(e, '잔액 조회');
+    }
+  }
+
+  /// 거래 합계·건수·기간 (DB에서 계산 — 거래 수와 관계없이 정확)
+  Future<TransactionSummary> getTransactionSummary({
+    required String businessId,
+    String? customerId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    String? day(DateTime? d) => d?.toIso8601String().split('T')[0];
+    try {
+      final response = await _client.rpc(
+        'get_transaction_summary',
+        params: {
+          'p_business_id': businessId,
+          'p_customer_id': customerId,
+          'p_start': day(startDate),
+          'p_end': day(endDate),
+        },
+      );
+      return TransactionSummary.fromJson(
+          (response as List).first as Map<String, dynamic>);
+    } catch (e) {
+      throw AppException.from(e, '거래 합계 조회');
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers.dart';
+import 'transaction_pages.dart';
 
 /// 데이터가 바뀐 뒤 다시 불러올 Provider를 한 곳에서 관리한다.
 ///
@@ -8,9 +9,9 @@ import 'providers.dart';
 extension DataRefresh on WidgetRef {
   /// 거래 추가·수정·삭제 후 — 거래 목록, 거래내역 탭, 거래처 잔액
   void refreshTransactions() {
-    invalidate(transactionsProvider);
+    invalidate(transactionPagesProvider);
     invalidate(transactionProvider);
-    invalidate(allTransactionsProvider);
+    invalidate(statementDataProvider);
     invalidate(customersProvider);
     invalidate(customerProvider);
   }
@@ -19,8 +20,8 @@ extension DataRefresh on WidgetRef {
   void refreshCustomers() {
     invalidate(customersProvider);
     invalidate(customerProvider);
-    invalidate(transactionsProvider);
-    invalidate(allTransactionsProvider);
+    invalidate(transactionPagesProvider);
+    invalidate(statementDataProvider);
   }
 
   /// 품목 추가·수정·삭제 후

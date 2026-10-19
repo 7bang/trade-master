@@ -1,49 +1,38 @@
 import 'package:flutter/material.dart';
 import '../../models/transaction.dart';
 import '../../models/customer.dart';
+import '../../providers/providers.dart' show StatementData;
 import '../../utils/formatters.dart';
 import 'receipt_styles.dart';
 import '../../config/on_colors.dart';
 
 /// 거래처 내역서 위젯
+///
+/// 목록은 최근 [StatementData.statementMaxRows]건만 담고,
+/// 합계·잔액·조회 기간은 DB에서 계산한 전체 거래 기준([StatementData.summary])이다.
 class CustomerStatementWidget extends StatelessWidget {
   final Customer customer;
-  final List<Transaction> transactions;
-  final DateTime startDate;
-  final DateTime endDate;
+  final StatementData statement;
   final String businessName;
 
   const CustomerStatementWidget({
     super.key,
     required this.customer,
-    required this.transactions,
-    required this.startDate,
-    required this.endDate,
+    required this.statement,
     required this.businessName,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 최대 50건 제한
-    const maxTransactions = 50;
-    final isLimited = transactions.length > maxTransactions;
-    final displayTransactions = isLimited
-        ? transactions.take(maxTransactions).toList()
-        : transactions;
+    final displayTransactions = statement.recent;
+    final isLimited = statement.isLimited;
+    final summary = statement.summary;
 
-    // 받을 돈 / 줄 돈 합계 계산 (전체 거래 기준)
-    double totalReceivable = 0;
-    double totalPayable = 0;
-
-    for (final transaction in transactions) {
-      if (transaction.type == TransactionType.receivable) {
-        totalReceivable += transaction.amount;
-      } else {
-        totalPayable += transaction.amount;
-      }
-    }
-
-    final currentBalance = totalReceivable - totalPayable;
+    final totalReceivable = summary.receivableTotal;
+    final totalPayable = summary.payableTotal;
+    final currentBalance = summary.balance;
+    final startDate = summary.firstDate ?? DateTime.now();
+    final endDate = summary.lastDate ?? DateTime.now();
 
     return Container(
       width: ReceiptStyles.receiptWidth,
@@ -111,7 +100,7 @@ class CustomerStatementWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: ReceiptStyles.paddingSmall),
               child: Text(
-                '※ 총 ${transactions.length}건 중 최근 $maxTransactions건만 표시',
+                '※ 총 ${summary.count}건 중 최근 ${displayTransactions.length}건만 표시 (합계는 전체 기준)',
                 style: ReceiptStyles.smallStyle.copyWith(
                   color: OnColors.warning,
                   fontWeight: FontWeight.bold,

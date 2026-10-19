@@ -9,6 +9,7 @@ import '../ai/insight_screen.dart';
 import '../../config/on_colors.dart';
 import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
+import '../../providers/transaction_pages.dart';
 
 /// 전체 거래내역 화면
 class TransactionListScreen extends ConsumerStatefulWidget {
@@ -20,7 +21,7 @@ class TransactionListScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
-  DateFilter _dateFilter = const DateFilter();
+  TransactionQuery _query = const TransactionQuery();
 
   // 거래처 선택 다이얼로그
   Future<void> _showCustomerSelectionDialog(
@@ -92,7 +93,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final transactionsAsync = ref.watch(allTransactionsProvider(_dateFilter));
+    final transactionsAsync = ref.watch(transactionPagesProvider(_query));
 
     return Scaffold(
       appBar: AppBar(
@@ -119,9 +120,10 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () =>
-            ref.pullToRefresh(allTransactionsProvider(_dateFilter).future),
+            ref.pullToRefresh(transactionPagesProvider(_query).future),
         child: transactionsAsync.when(
-          data: (transactions) {
+          data: (page) {
+            final transactions = page.items;
             if (transactions.isEmpty) {
               return EmptyStateView(
                 icon: Icons.receipt_long,
@@ -143,8 +145,17 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
               ..sort((a, b) => b.compareTo(a));
 
             return ListView.builder(
-              itemCount: sortedDates.length,
+              // 끝에 "더 불러오기" 한 칸 (50건씩 이어서 불러옴)
+              itemCount: sortedDates.length + (page.hasMore ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == sortedDates.length) {
+                  return LoadMoreFooter(
+                    error: page.loadMoreError,
+                    onLoadMore: () => ref
+                        .read(transactionPagesProvider(_query).notifier)
+                        .loadMore(),
+                  );
+                }
                 final dateKey = sortedDates[index];
                 final dayTransactions = groupedTransactions[dateKey]!;
 
@@ -249,7 +260,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                 final startOfMonth = DateTime(now.year, now.month, 1);
                 final endOfMonth = DateTime(now.year, now.month + 1, 0);
                 setState(() {
-                  _dateFilter = DateFilter(
+                  _query = TransactionQuery(
                     startDate: startOfMonth,
                     endDate: endOfMonth,
                   );
@@ -265,7 +276,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                 final lastMonth = DateTime(now.year, now.month - 1, 1);
                 final endOfLastMonth = DateTime(now.year, now.month, 0);
                 setState(() {
-                  _dateFilter = DateFilter(
+                  _query = TransactionQuery(
                     startDate: lastMonth,
                     endDate: endOfLastMonth,
                   );
@@ -281,13 +292,13 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                 await _showCustomDateRangePicker();
               },
             ),
-            if (_dateFilter.startDate != null || _dateFilter.endDate != null)
+            if (_query.startDate != null || _query.endDate != null)
               ListTile(
                 leading: const Icon(Icons.clear),
                 title: const Text('필터 초기화'),
                 onTap: () {
                   setState(() {
-                    _dateFilter = const DateFilter();
+                    _query = const TransactionQuery();
                   });
                   Navigator.pop(context);
                 },
@@ -311,10 +322,10 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       initialDateRange:
-          _dateFilter.startDate != null && _dateFilter.endDate != null
+          _query.startDate != null && _query.endDate != null
           ? DateTimeRange(
-              start: _dateFilter.startDate!,
-              end: _dateFilter.endDate!,
+              start: _query.startDate!,
+              end: _query.endDate!,
             )
           : null,
       builder: (context, child) {
@@ -324,7 +335,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
 
     if (picked != null) {
       setState(() {
-        _dateFilter = DateFilter(startDate: picked.start, endDate: picked.end);
+        _query = TransactionQuery(startDate: picked.start, endDate: picked.end);
       });
     }
   }
