@@ -1,6 +1,6 @@
 # 폰거래장 온 관리자 페이지
 
-최고관리자가 브라우저에서 로그인해 사용 현황을 보는 **조회 전용** 페이지. 기획: [`../plan-admin-dashboard.md`](../plan-admin-dashboard.md)
+최고관리자가 브라우저에서 로그인해 사용 현황을 보는 페이지. 사용 현황은 **조회 전용**, 쓰기는 **공지사항 작성**뿐. 기획: [`../plan-admin-dashboard.md`](../plan-admin-dashboard.md)
 
 ```
 브라우저 ──HTTPS──▶ Cloudflare Pages (정적 파일만: public/)
@@ -20,7 +20,7 @@
 
 ## 1. DB 준비 (완료)
 
-- 마이그레이션: `20261021000000_admin_dashboard.sql`, `20261021000001_admin_independent_ai_pricing.sql`
+- 마이그레이션: `20261021000000_admin_dashboard.sql`, `20261021000001_admin_independent_ai_pricing.sql`, `20261022000000_announcements.sql`
 - 관리자 등록 (이메일을 git에 남기지 않도록 SQL로 1회):
   ```sql
   insert into public.admins(user_id)
@@ -62,10 +62,19 @@ npx wrangler pages deploy admin-web/public --project-name phone-ledger-admin
 대시보드 **Zero Trust → Access → Applications → Add → Self-hosted** → 도메인 `phone-ledger-admin.pages.dev` →
 정책: Allow, Emails = 관리자 이메일. 이후 페이지 접속 시 이메일로 받은 코드를 먼저 입력해야 한다.
 
+## 공지사항 쓰기
+
+**공지사항** 탭 → **+ 새 공지** → 제목·본문(줄바꿈 그대로)·링크(선택, https만)·버튼 글자 →
+- **게시하기**: 켜면 앱 **설정 → 공지사항**에 바로 보임 (끄면 숨김, 처음 게시 시각은 유지)
+- **팝업으로 알리기**: 아직 안 읽은 사람에게 앱을 열 때 한 번 팝업. 확인하면 읽음 처리
+- 목록의 **읽은 사람** 수로 얼마나 봤는지 확인. 삭제하면 읽음 기록도 함께 지워짐
+
+> 공지 화면은 새 앱 버전부터 보인다. 업데이트 공지는 새 버전을 스토어에 올린 뒤 게시하는 것이 자연스럽다.
+
 ## 보안 메모
 
 - 데이터는 DB 함수 `admin_*`가 `public.admins`에 있는 계정에게만 돌려준다. 페이지 주소가 알려져도 관리자 계정이 아니면 빈손
-- 조회 전용 — 데이터를 바꾸는 함수 없음
+- 사용자 데이터는 조회 전용. 쓰기 함수는 공지사항(`admin_save_announcement`, `admin_delete_announcement`)뿐이며 역시 관리자 확인
 - 사업장 상세를 열 때마다 `public.admin_access_logs`에 기록 (누가·언제·어느 사업장)
 - 사업장명·메모 등 사용자 입력은 화면에 넣을 때 모두 이스케이프 (관리자 세션 탈취 방지)
 - `_headers`의 CSP: 스크립트는 이 사이트와 jsDelivr만, 통신은 Supabase만 허용, 인라인 스크립트 금지, 다른 사이트에 끼워넣기 금지

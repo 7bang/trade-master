@@ -233,6 +233,20 @@ supabase secrets list
 
 ---
 
+## 공지사항 · 관리자 웹
+
+| 구성 | 위치 |
+|---|---|
+| 공지 테이블 | `announcements` (게시된 것만 RLS로 읽기), `announcement_reads` (본인 읽음 기록) — migration `20261022000000` |
+| 앱 | 설정 → 공지사항 (`screens/settings/announcements_screen.dart`), 하단 설정 탭 빨간 점, 중요 공지 팝업(로그인 후 1회) |
+| 관리자 웹 | `admin-web/public/` (정적, Cloudflare Pages 등) — 사용 현황 조회 + 공지 작성. 데이터는 `admin_*` 함수가 `public.admins` 확인 후에만 |
+| 관리자 등록 | git 밖에서 SQL 1회: `insert into public.admins(user_id) select id from auth.users where email = '...'` |
+
+- 관리자 함수는 텔레그램 리포트(`stats` 스키마)를 읽거나 쓰지 않는다 (리포트는 별도 관리)
+- 관리자 웹에 사용자 입력을 넣을 때는 반드시 `esc()` 로 이스케이프
+
+---
+
 ## Ops Report (라즈베리파이 → 텔레그램)
 
 라즈베리파이가 12시간마다 DB 함수 `stats.trade_report()`의 결과(완성된 리포트 문장)를 텔레그램으로 보낸다.
