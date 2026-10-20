@@ -177,7 +177,8 @@ class CustomerTransactionsSliver extends ConsumerWidget {
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          // 아래 여백: AI 마이크 + 거래 추가 버튼에 마지막 거래가 가리지 않게
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 160),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               // 끝에 "더 불러오기" 한 칸 (50건씩 이어서 불러옴)

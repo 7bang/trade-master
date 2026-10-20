@@ -53,6 +53,50 @@ class ParsedTransaction {
   }
 }
 
+/// 말·글자 자연어 분석 결과 (parse_text). 알아듣지 못한 항목은 null.
+/// 품목·단가·금액 맞추기는 [TransactionDraft]가 한다.
+class SpokenTransaction {
+  final String type; // 'receivable' | 'payable'
+  final DateTime date;
+  final String? productName;
+  final double? quantity;
+  final String? unit;
+  final double? unitPrice;
+  final double? amount;
+  final String? memo;
+
+  const SpokenTransaction({
+    required this.type,
+    required this.date,
+    this.productName,
+    this.quantity,
+    this.unit,
+    this.unitPrice,
+    this.amount,
+    this.memo,
+  });
+
+  factory SpokenTransaction.fromAiJson(Object? data) {
+    if (data is! Map) {
+      throw const AiException('AI 응답 형식이 올바르지 않습니다. 다시 시도해주세요.');
+    }
+    String? text(Object? v) =>
+        v is String && v.trim().isNotEmpty ? v.trim() : null;
+    double? positive(Object? v) => v is num && v > 0 ? v.toDouble() : null;
+
+    return SpokenTransaction(
+      type: data['type'] == 'payable' ? 'payable' : 'receivable',
+      date: DateTime.tryParse(data['date']?.toString() ?? '') ?? DateTime.now(),
+      productName: text(data['productName']),
+      quantity: positive(data['quantity']),
+      unit: text(data['unit']),
+      unitPrice: positive(data['unitPrice']),
+      amount: positive(data['amount']),
+      memo: text(data['memo']),
+    );
+  }
+}
+
 class InsightReport {
   final String summary;
   final List<String> risks;
@@ -104,12 +148,16 @@ class AiService {
 
   // ── 1. 자연어 거래 입력 ──────────────────────────────────────────────────
 
-  Future<ParsedTransaction> parseNaturalLanguage(String text) async {
-    final result = await _invoke('parse_text', {'text': text});
-    return ParsedTransaction.fromAiJson(
-      result,
-      retryHint: '"사과 30개 5만원"처럼 금액을 함께 적어주세요.',
-    );
+  /// [productNames]: 사업장의 등록 품목 이름 — AI가 "광어 큰거" → "광어(대)"처럼 맞추는 데 쓴다.
+  Future<SpokenTransaction> parseNaturalLanguage(
+    String text, {
+    List<String> productNames = const [],
+  }) async {
+    final result = await _invoke('parse_text', {
+      'text': text,
+      'products': productNames.take(100).toList(),
+    });
+    return SpokenTransaction.fromAiJson(result);
   }
 
   // ── 2. 영수증/메모 사진 → 거래 입력 ─────────────────────────────────────

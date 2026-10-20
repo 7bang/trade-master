@@ -11,6 +11,8 @@ import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
 import '../../providers/transaction_pages.dart';
 import '../../utils/snackbars.dart';
+import '../../widgets/ai/ai_voice_fab.dart';
+import '../ai/ai_transaction_input_screen.dart';
 
 /// 전체 거래내역 화면
 class TransactionListScreen extends ConsumerStatefulWidget {
@@ -25,10 +27,12 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   TransactionQuery _query = const TransactionQuery();
 
   // 거래처 선택 다이얼로그
+  /// 거래처를 고른 뒤 [onSelected] (일반 거래 입력 또는 AI 음성 입력)
   Future<void> _showCustomerSelectionDialog(
     BuildContext context,
-    WidgetRef ref,
-  ) async {
+    WidgetRef ref, {
+    required void Function(String customerId) onSelected,
+  }) async {
     final customersAsync = ref.read(customersProvider);
 
     await customersAsync.when(
@@ -74,7 +78,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         );
 
         if (selectedCustomer != null && context.mounted) {
-          context.push('/customers/$selectedCustomer/transactions/new');
+          onSelected(selectedCustomer);
         }
       },
       loading: () {
@@ -140,6 +144,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
               ..sort((a, b) => b.compareTo(a));
 
             return ListView.builder(
+              // 아래 여백: AI 마이크 + 거래 추가 버튼에 마지막 거래가 가리지 않게
+              padding: const EdgeInsets.only(bottom: 160),
               // 끝에 "더 불러오기" 한 칸 (50건씩 이어서 불러옴)
               itemCount: sortedDates.length + (page.hasMore ? 1 : 0),
               itemBuilder: (context, index) {
@@ -224,10 +230,37 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
               ErrorView(error: error, onRetry: () => ref.refreshAll()),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCustomerSelectionDialog(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('거래 추가'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          AiVoiceFab(
+            onPressed: () => _showCustomerSelectionDialog(
+              context,
+              ref,
+              onSelected: (customerId) => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AiTransactionInputScreen(
+                    customerId: customerId,
+                    autoStartVoice: true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton.extended(
+            heroTag: 'add-transaction-fab',
+            onPressed: () => _showCustomerSelectionDialog(
+              context,
+              ref,
+              onSelected: (customerId) =>
+                  context.push('/customers/$customerId/transactions/new'),
+            ),
+            icon: const Icon(Icons.add),
+            label: const Text('거래 추가'),
+          ),
+        ],
       ),
     );
   }

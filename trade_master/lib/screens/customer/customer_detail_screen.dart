@@ -12,6 +12,7 @@ import '../../providers/data_refresh.dart';
 import '../../utils/app_exception.dart';
 import '../../utils/snackbars.dart';
 import 'customer_detail_sections.dart';
+import '../../widgets/ai/ai_voice_fab.dart';
 
 /// 거래처 상세 화면
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -312,12 +313,28 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _showAddTransactionMenu(context);
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('거래 추가'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          AiVoiceFab(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AiTransactionInputScreen(
+                  customerId: widget.customerId,
+                  autoStartVoice: true,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton.extended(
+            heroTag: 'add-transaction-fab',
+            onPressed: () => _showAddTransactionMenu(context),
+            icon: const Icon(Icons.add),
+            label: const Text('거래 추가'),
+          ),
+        ],
       ),
     );
   }

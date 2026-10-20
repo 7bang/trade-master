@@ -8,6 +8,10 @@
 	<string>폰거래장 온</string>
 	<key>NSCameraUsageDescription</key>
 	<string>영수증이나 거래 메모를 촬영해 AI로 거래 내용을 자동 입력하기 위해 카메라를 사용합니다.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>거래 내용을 말로 입력할 수 있도록 마이크를 사용합니다.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>말한 거래 내용을 글자로 바꾸기 위해 음성 인식을 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>사진 보관함의 영수증이나 거래 메모 사진을 AI로 읽어 거래 내용을 자동 입력하기 위해 사진에 접근합니다.</string>
 	<key>CFBundleExecutable</key>

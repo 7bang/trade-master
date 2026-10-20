@@ -17,13 +17,17 @@ import '../../widgets/transaction_entry_fields.dart';
 class TransactionFormScreen extends ConsumerStatefulWidget {
   final String customerId;
   final String? transactionId; // null이면 등록, 값이 있으면 수정
-  final ParsedTransaction? initialData; // AI 파싱 결과 프리필
+  final ParsedTransaction? initialData; // AI 사진 분석 결과 프리필
+
+  /// AI 자연어·음성 결과 카드에서 "자세히 입력"으로 넘어올 때 (이 화면이 dispose 책임)
+  final TransactionEntry? initialEntry;
 
   const TransactionFormScreen({
     super.key,
     required this.customerId,
     this.transactionId,
     this.initialData,
+    this.initialEntry,
   });
 
   @override
@@ -44,6 +48,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     super.initState();
     if (_isEdit) {
       _loadTransaction();
+    } else if (widget.initialEntry != null) {
+      _entry.dispose();
+      _entry = widget.initialEntry!;
     } else if (widget.initialData != null) {
       _applyInitialData(widget.initialData!);
     }

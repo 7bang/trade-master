@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- 네트워크 상태 확인 권한 (권장) -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- AI 자동 입력 음성 입력 (기기 내장 음성 인식) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
         android:label="폰거래장 온"
@@ -43,6 +45,10 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- 음성 인식 서비스 (Android 11+ 패키지 공개 범위) -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
+        </intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
