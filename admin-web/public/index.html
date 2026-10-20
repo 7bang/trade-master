@@ -75,6 +75,15 @@
   .login input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; min-height: 48px; }
   .login .btn { width: 100%; margin-top: 20px; min-height: 52px; font-size: 17px; }
   .error { color: var(--vermilion-deep); background: #F8E6E2; border: 1px solid var(--vermilion); padding: 10px 12px; border-radius: 10px; margin-top: 12px; }
+  .form label { display: block; font-size: 14px; color: var(--gray); margin: 14px 0 4px; }
+  .form input[type=text], .form input[type=url], .form textarea { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  .form textarea { min-height: 220px; resize: vertical; line-height: 1.6; }
+  .form .check { display: flex; align-items: center; gap: 8px; color: var(--ink); margin-top: 14px; font-size: 15px; }
+  .form .check input { width: 20px; height: 20px; }
+  .form .hint { color: var(--gray); font-size: 13px; margin-top: 2px; }
+  .form .actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .btn.danger { color: var(--vermilion-deep); border-color: var(--vermilion); }
+  .b-pub { color: var(--success); } .b-draft { color: var(--gray); border-style: dashed; } .b-imp { color: var(--info); }
   .note { color: var(--warning); background: #F6EDDF; border: 1px solid var(--warning); padding: 10px 12px; border-radius: 10px; }
   .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
   .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 15px; }
@@ -100,6 +109,7 @@
       <a href="#/overview" data-nav="overview">개요</a>
       <a href="#/businesses" data-nav="businesses">사업장</a>
       <a href="#/ai" data-nav="ai">AI 사용량</a>
+      <a href="#/notices" data-nav="notices">공지사항</a>
     </nav>
     <div class="who"><span id="who-email"></span><button class="btn link" id="logout">로그아웃</button></div>
   </div>

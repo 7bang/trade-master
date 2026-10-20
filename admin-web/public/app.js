@@ -347,17 +347,105 @@
     });
   }
 
+  // ── 화면: 공지사항 (작성·수정·게시/숨김·삭제) ───────────────────────────
+  async function renderNotices() {
+    const list = await rpc('admin_announcements');
+    const rows = list.map((a) => `<tr class="click" data-id="${esc(a.id)}">
+      <td><strong>${esc(a.title)}</strong>
+        <div class="muted small">${esc(String(a.body).slice(0, 60))}${String(a.body).length > 60 ? '…' : ''}</div></td>
+      <td>${a.is_published ? '<span class="badge b-pub">✓ 게시</span>' : '<span class="badge b-draft">○ 숨김</span>'}
+        ${a.is_important ? ' <span class="badge b-imp">! 팝업</span>' : ''}</td>
+      <td class="num small">${esc(kst(a.published_at))}</td>
+      <td class="r num">${n(a.read_count)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="muted center">아직 공지가 없습니다</td></tr>';
+    app.innerHTML = `<h1>공지사항</h1>
+      <p class="muted">게시한 공지는 앱 <strong>설정 → 공지사항</strong>에 바로 보입니다.
+        <strong>팝업</strong>을 켜면 아직 안 읽은 사람에게 앱을 열 때 한 번 뜹니다.</p>
+      <div class="toolbar"><button class="btn primary" id="new">+ 새 공지</button></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>제목</th><th>상태</th><th>게시일</th><th class="r">읽은 사람</th></tr></thead>
+        <tbody id="nb">${rows}</tbody></table></div>`;
+    app.querySelector('#new').addEventListener('click', () => { location.hash = '#/notice/new'; });
+    app.querySelector('#nb').addEventListener('click', (e) => {
+      const tr = e.target.closest('tr[data-id]');
+      if (tr) location.hash = `#/notice/${tr.dataset.id}`;
+    });
+  }
+
+  async function renderNoticeForm(id) {
+    const isNew = id === 'new';
+    let a = { title: '', body: '', link_url: '', link_label: '', is_important: false, is_published: false };
+    if (!isNew) {
+      const found = (await rpc('admin_announcements')).find((x) => x.id === id);
+      if (!found) throw new Error('공지를 찾을 수 없습니다.');
+      a = found;
+    }
+    app.innerHTML = `<p><a href="#/notices">← 공지사항</a></p>
+      <h1>${isNew ? '새 공지' : '공지 수정'}</h1>
+      <form class="card form" id="nf">
+        <label for="f-title">제목 (100자까지)</label>
+        <input id="f-title" type="text" maxlength="100" required value="${esc(a.title)}">
+        <label for="f-body">본문 (5,000자까지, 줄바꿈 그대로 표시)</label>
+        <textarea id="f-body" maxlength="5000" required>${esc(a.body)}</textarea>
+        <label for="f-url">링크 주소 (선택, https:// 로 시작)</label>
+        <input id="f-url" type="url" placeholder="https://" pattern="https://.+" value="${esc(a.link_url || '')}">
+        <label for="f-label">링크 버튼 글자 (선택, 비우면 "자세히 보기")</label>
+        <input id="f-label" type="text" maxlength="30" value="${esc(a.link_label || '')}">
+        <label class="check"><input id="f-imp" type="checkbox" ${a.is_important ? 'checked' : ''}> 팝업으로 알리기 (앱을 열 때 안 읽은 사람에게 한 번)</label>
+        <label class="check"><input id="f-pub" type="checkbox" ${a.is_published ? 'checked' : ''}> 게시하기 (끄면 앱에 보이지 않음)</label>
+        ${!isNew && a.published_at ? `<div class="hint">처음 게시: ${esc(kst(a.published_at))} · 읽은 사람 ${n(a.read_count)}명</div>` : ''}
+        <div class="actions">
+          <button class="btn primary" type="submit">저장</button>
+          <a class="btn" href="#/notices" style="text-decoration:none">취소</a>
+          ${isNew ? '' : '<button class="btn danger" type="button" id="del" style="margin-left:auto">삭제</button>'}
+        </div>
+        <div id="ferr"></div>
+      </form>`;
+    const form = app.querySelector('#nf');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = '저장 중…';
+      try {
+        await rpc('admin_save_announcement', {
+          p_id: isNew ? null : id,
+          p_title: form.querySelector('#f-title').value,
+          p_body: form.querySelector('#f-body').value,
+          p_link_url: form.querySelector('#f-url').value.trim() || null,
+          p_link_label: form.querySelector('#f-label').value.trim() || null,
+          p_is_important: form.querySelector('#f-imp').checked,
+          p_is_published: form.querySelector('#f-pub').checked,
+        });
+        location.hash = '#/notices';
+      } catch (err) {
+        form.querySelector('#ferr').innerHTML = `<div class="error">${esc(err.message)}</div>`;
+        btn.disabled = false; btn.textContent = '저장';
+      }
+    });
+    form.querySelector('#del')?.addEventListener('click', async () => {
+      if (!confirm(`"${a.title}" 공지를 삭제할까요? 읽음 기록도 함께 지워지고 되돌릴 수 없습니다.`)) return;
+      try {
+        await rpc('admin_delete_announcement', { p_id: id });
+        location.hash = '#/notices';
+      } catch (err) {
+        form.querySelector('#ferr').innerHTML = `<div class="error">${esc(err.message)}</div>`;
+      }
+    });
+  }
+
   // ── 라우팅 ─────────────────────────────────────────────────────────────
   async function route(aiDays) {
     const [, page = 'overview', id] = location.hash.split('/');
     document.querySelectorAll('[data-nav]').forEach((a) =>
-      a.classList.toggle('on', a.dataset.nav === (page === 'business' ? 'businesses' : page)));
+      a.classList.toggle('on', a.dataset.nav === ({ business: 'businesses', notice: 'notices' }[page] || page)));
     app.innerHTML = '<p class="loading">불러오는 중…</p>';
     tip.style.display = 'none';
     try {
       if (page === 'businesses') await renderBusinesses();
       else if (page === 'business' && id) await renderBusiness(id);
       else if (page === 'ai') await renderAi(typeof aiDays === 'number' ? aiDays : 30);
+      else if (page === 'notices') await renderNotices();
+      else if (page === 'notice' && id) await renderNoticeForm(id);
       else await renderOverview();
       scrollTo(0, 0);
     } catch (e) {
