@@ -200,6 +200,28 @@ const transactionSchema = {
   additionalProperties: false,
 };
 
+const nullableNumber = { anyOf: [{ type: "number" }, { type: "null" }] };
+
+// parse_text (말·글자): 품목·수량·단위·단가를 따로 뽑는다. 못 알아들은 항목은 null.
+// 금액·단가 맞추기와 품목 고르기는 앱(TransactionDraft)이 한다.
+const spokenSchema = {
+  type: "object",
+  properties: {
+    type: { type: "string", enum: ["receivable", "payable"] },
+    date: { type: "string", format: "date" },
+    productName: nullableString,
+    quantity: nullableNumber,
+    unit: nullableString,
+    unitPrice: nullableNumber,
+    amount: nullableNumber,
+    memo: nullableString,
+  },
+  required: ["type", "date", "productName", "quantity", "unit", "unitPrice", "amount", "memo"],
+  additionalProperties: false,
+};
+
+const MAX_PRODUCTS = 100;
+
 const insightSchema = {
   type: "object",
   properties: {
@@ -214,22 +236,53 @@ const insightSchema = {
 // ── Tasks ─────────────────────────────────────────────────────────────────
 async function parseText(input: Record<string, unknown>, meter: Meter) {
   const text = str(input.text, "입력 내용");
+  const products = Array.isArray(input.products)
+    ? input.products
+      .filter((p): p is string => typeof p === "string" && p.trim() !== "")
+      .map((p) => p.trim().slice(0, 50))
+      .slice(0, MAX_PRODUCTS)
+    : [];
+  const catalog = products.length
+    ? products.map((p) => `- ${p}`).join("\n")
+    : "(등록된 품목 없음)";
+
   const result = await callClaude({
     meter,
     model: TEXT_MODEL,
-    schema: transactionSchema,
-    content: `사용자 입력을 거래 정보로 파싱해주세요.
+    schema: spokenSchema,
+    content: `시장 상인이 말하거나 적은 거래 한 건을 항목별로 정리해주세요.
+음성 인식 결과일 수 있어 띄어쓰기·맞춤법이 틀릴 수 있습니다.
 
 <input>${text}</input>
 오늘 날짜: ${today()}
 
+<등록된_품목>
+${catalog}
+</등록된_품목>
+
 규칙:
-- "받을 돈", "매출", "입금", "판매" → receivable
-- "줄 돈", "매입", "출금", "구매", "지급" → payable
-- 수량×단가 언급 시 amount = 수량×단가
-- 금액을 알 수 없으면 amount = 0
-- 날짜 언급이 없으면 오늘 날짜 사용
-- 거래처명·메모가 없으면 null`,
+- type: 사장님이 돈을 받는 거래면 receivable, 돈을 내는 거래면 payable
+  - receivable: "받을 돈", "매출", "판매", "팔았어", "물건을 외상으로 줬어", "입금 받을"
+  - payable: "줄 돈", "매입", "구매", "샀어", "돈 줬어", "돈 냈어", "지급", "값 치렀어"
+  - "~원 줬어/냈어"처럼 돈을 준 경우는 payable. 언급이 없으면 receivable
+- date: "어제", "그저께", "지난 월요일" 등은 오늘 기준으로 계산. 언급 없으면 오늘
+- productName: 거래한 물건 이름. 등록된 품목 중 같은 물건이 있으면 그 이름을 글자 그대로 쓰고, 없으면 말한 이름. 물건이 없으면 null
+- quantity: 수량 숫자만. 언급 없으면 null
+- unit: 말한 단위. "키로·킬로·키로그램" → "kg", 그 외(개, 마리, 박스, 단, 근)는 그대로. 언급 없으면 null
+- unitPrice: 한 단위당 가격을 말했을 때만 ("키로에 2만원", "개당 500원"). 아니면 null
+- amount: 전체 금액을 말했을 때만. 아니면 null. 계산해서 채우지 말 것
+- memo: 위 항목에 들어가지 않는 내용(배송, 결제 방법 등). 없으면 null
+- 금액·수량을 짐작해서 만들지 말 것. 들리지 않았으면 null
+
+말로 한 숫자 예:
+- "사만 오천원" → 45000, "만 이천" → 12000, "삼십만" → 300000, "오천 오백원" → 5500
+- "삼 키로" → quantity 3, unit "kg" / "반 키로" → 0.5 / "두 박스" → 2, "박스"
+- "6만원" "육만원" → 60000
+
+예:
+"광어 3키로 6만원 받을 돈" → productName "광어", quantity 3, unit "kg", unitPrice null, amount 60000
+"우럭 키로에 만오천원 두 키로 샀어" → payable, productName "우럭", quantity 2, unit "kg", unitPrice 15000, amount null
+"포장 비닐 세 묶음 육천원 냈어" → payable, productName "포장 비닐", quantity 3, unit "묶음", amount 6000`,
   });
   return JSON.parse(result);
 }
