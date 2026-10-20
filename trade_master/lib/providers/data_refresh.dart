@@ -36,12 +36,19 @@ extension DataRefresh on WidgetRef {
     invalidate(currentBusinessProvider);
   }
 
+  /// 공지 목록·읽음 기록
+  void refreshAnnouncements() {
+    invalidate(announcementsProvider);
+    invalidate(readAnnouncementIdsProvider);
+  }
+
   /// 전부 다시 불러오기 — 오류 화면의 "다시 시도", 당겨서 새로고침
   void refreshAll() {
     refreshBusiness();
     refreshCustomers();
     refreshProducts();
     refreshTransactions();
+    refreshAnnouncements();
   }
 
   /// 당겨서 새로고침: 전부 다시 불러오고 [screenData]가 끝날 때까지 기다린다.

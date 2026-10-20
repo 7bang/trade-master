@@ -8,6 +8,7 @@ import '../../providers/providers.dart';
 import '../../providers/data_refresh.dart';
 import '../../config/on_colors.dart';
 import '../../utils/snackbars.dart';
+import 'announcements_screen.dart';
 
 // 카카오 오픈채팅 문의 링크 — 실제 링크로 교체 필요
 const _kakaoOpenChatUrl = 'https://open.kakao.com/o/gRjICFyi';
@@ -82,6 +83,31 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(),
 
+          // 공지사항
+          Builder(builder: (context) {
+            final unread = ref.watch(unreadAnnouncementsProvider).length;
+            return ListTile(
+              leading: const Icon(Icons.campaign_outlined),
+              title: const Text('공지사항'),
+              subtitle: const Text('업데이트 소식과 안내'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (unread > 0)
+                    Badge(
+                      label: Text('$unread'),
+                      backgroundColor: OnColors.vermilion,
+                    ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AnnouncementsScreen()),
+              ),
+            );
+          }),
+          const Divider(),
+
           // 개발자 문의
           ListTile(
             leading: const Icon(
@@ -132,6 +158,7 @@ class SettingsScreen extends ConsumerWidget {
                 }
                 // 이전 사용자의 데이터가 캐시에 남지 않도록 비운다
                 ref.refreshAll();
+                ImportantAnnouncementPopup.reset();
                 if (context.mounted) {
                   context.go('/');
                 }

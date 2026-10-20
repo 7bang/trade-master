@@ -7,6 +7,7 @@ import '../models/customer.dart';
 import '../models/product.dart';
 import '../models/transaction.dart';
 import '../models/transaction_summary.dart';
+import '../models/announcement.dart';
 
 // ========== 서비스 Providers ==========
 
@@ -132,3 +133,25 @@ final statementDataProvider = FutureProvider.family<StatementData, String>(
     );
   },
 );
+
+// ========== 공지사항 Providers ==========
+
+/// 게시된 공지 (최신순)
+final announcementsProvider = FutureProvider<List<Announcement>>((ref) async {
+  ref.watch(currentUserProvider); // 로그인 계정이 바뀌면 다시 불러옴
+  return ref.watch(supabaseServiceProvider).getAnnouncements();
+});
+
+/// 내가 읽은 공지 id
+final readAnnouncementIdsProvider = FutureProvider<Set<String>>((ref) async {
+  ref.watch(currentUserProvider);
+  return ref.watch(supabaseServiceProvider).getReadAnnouncementIds();
+});
+
+/// 안 읽은 공지 (불러오는 중·실패면 빈 목록 — 빨간 점·팝업은 조용히 생략)
+final unreadAnnouncementsProvider = Provider<List<Announcement>>((ref) {
+  final all = ref.watch(announcementsProvider).valueOrNull ?? const [];
+  final read = ref.watch(readAnnouncementIdsProvider).valueOrNull;
+  if (read == null) return const [];
+  return all.where((a) => !read.contains(a.id)).toList();
+});

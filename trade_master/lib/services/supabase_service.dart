@@ -4,6 +4,7 @@ import '../models/customer.dart';
 import '../models/product.dart';
 import '../models/transaction.dart';
 import '../models/transaction_summary.dart';
+import '../models/announcement.dart';
 import '../models/db_columns.dart';
 import '../utils/app_exception.dart';
 
@@ -400,6 +401,52 @@ class SupabaseService {
       return (response as num).toDouble();
     } catch (e) {
       throw AppException.from(e, '잔액 조회');
+    }
+  }
+
+  // ========== 공지사항 ==========
+
+  /// 게시된 공지 (최신순) — RLS가 게시된 것만 돌려준다
+  Future<List<Announcement>> getAnnouncements() async {
+    try {
+      final response = await _client
+          .from('announcements')
+          .select('id, title, body, link_url, link_label, is_important, published_at')
+          .order('published_at', ascending: false)
+          .limit(100);
+      return (response as List)
+          .map((json) => Announcement.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw AppException.from(e, '공지사항 조회');
+    }
+  }
+
+  /// 내가 읽은 공지 id
+  Future<Set<String>> getReadAnnouncementIds() async {
+    try {
+      final response =
+          await _client.from('announcement_reads').select('announcement_id');
+      return (response as List)
+          .map((row) => row['announcement_id'] as String)
+          .toSet();
+    } catch (e) {
+      throw AppException.from(e, '공지 읽음 기록 조회');
+    }
+  }
+
+  /// 읽음 표시 (이미 읽었으면 그대로)
+  Future<void> markAnnouncementRead(String announcementId) async {
+    final userId = currentUser?.id;
+    if (userId == null) return;
+    try {
+      await _client.from('announcement_reads').upsert(
+        {'user_id': userId, 'announcement_id': announcementId},
+        onConflict: 'user_id,announcement_id',
+        ignoreDuplicates: true,
+      );
+    } catch (e) {
+      throw AppException.from(e, '공지 읽음 표시');
     }
   }
 
